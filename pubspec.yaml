@@ -1,0 +1,37 @@
+name: profectus
+description: A Flutter app for performance tracking and gamification.
+
+publish_to: 'none' # Indica que o pacote não será publicado no pub.dev.
+
+version: 1.0.0+1 # Versão do aplicativo.
+
+environment:
+  sdk: '>=3.1.5 <4.0.0' # Define a versão mínima e máxima do SDK Dart suportada.
+
+dependencies:
+  flutter:
+    sdk: flutter # Inclui o SDK Flutter.
+  cupertino_icons: ^1.0.2 # Ícones do estilo iOS.
+  cloud_firestore: ^4.15.8 # Banco de dados NoSQL do Firebase para armazenar e sincronizar dados em tempo real.
+  firebase_auth: ^4.17.8 # Gerencia autenticação de usuários (e-mail, Google, etc.).
+  firebase_core: ^2.27.0 # Integração central com o Firebase.
+  firebase_messaging: ^14.7.19 # Configura notificações push para dispositivos.
+  firebase_storage: ^11.6.9 # Armazena arquivos como imagens ou documentos no Firebase Storage.
+  firebase_app_check: ^0.2.1+17 # Garante que somente apps autenticados interajam com o backend.
+  cloud_functions: ^4.6.8 # Permite chamadas remotas a funções hospedadas no Firebase.
+  flutter_svg: ^2.0.10+1 # Suporte para exibir imagens no formato SVG.
+  intl: ^0.19.0 # Utilizado para formatação de datas, números e internacionalização (i18n).
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter # Ferramentas para escrever e executar testes no Flutter.
+  flutter_lints: ^4.0.0 # Conjunto de regras de linting (boas práticas de código) atualizado.
+
+flutter:
+  uses-material-design: true # Ativa o uso do tema Material Design.
+
+  # Assets
+  assets:
+    - imagens/logo_profectus.png
+    - imagens/bot.png
+    - imagens/jmbranco.png
