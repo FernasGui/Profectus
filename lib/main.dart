@@ -33,8 +33,9 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Fundo claro
         textTheme: const TextTheme(
-          bodyText1: TextStyle(color: Color(0xFF003366)), // Texto principal
-          bodyText2: TextStyle(color: Color(0xFF666666)), // Texto secundário
+          bodyLarge: TextStyle(color: Color(0xFF083366)),  // Texto principal
+bodyMedium: TextStyle(color: Color(0xFF666666)), // Texto secundário
+
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF003366), // Cor da AppBar

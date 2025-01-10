@@ -98,8 +98,8 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 40),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  primary: const Color(0xFF358932),
-                  onPrimary: Colors.white,
+                  backgroundColor: const Color(0xFF358932),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),

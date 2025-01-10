@@ -138,8 +138,8 @@ TextFormField(
               SizedBox(height: 40),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: Color(0xFF358932), // Cor de fundo do botão
-                    onPrimary: Colors.white, // Cor do texto do botão
+                    backgroundColor: Color(0xFF358932), // Cor de fundo do botão
+                    foregroundColor: Colors.white, // Cor do texto do botão
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
