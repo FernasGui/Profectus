@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/autenticacao/loginPage.dart';
 import 'package:profectus/pagsecundarias/pontosituacao.dart';
-import 'package:profectus/pagsecundarias/minhaequipa.dart'; // Adicionado
+import 'package:profectus/pagsecundarias/minhaequipa.dart';
 
 class ConfiguracaoPage extends StatefulWidget {
   @override

@@ -217,7 +217,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
                   ),
                   onPressed: () {},
                   child: const Text('Feedback Dado\nHistórico de Feedback',
