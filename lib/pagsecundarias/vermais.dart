@@ -112,10 +112,10 @@ class _VerMaisPageState extends State<VerMaisPage> {
             const SizedBox(height: 20),
 
             // Data
-            const Text(
-              'Data: 20/12/2024',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+          Text(
+          'Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
+          ),
             const SizedBox(height: 20),
 
             // Objetivos Anuais
@@ -185,10 +185,12 @@ class _VerMaisPageState extends State<VerMaisPage> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
+        selectedLabelStyle: TextStyle(fontSize: 10),
+        unselectedLabelStyle: TextStyle(fontSize: 10),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Ponto de situação'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Ponto de Situação'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],

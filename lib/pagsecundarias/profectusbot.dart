@@ -1,0 +1,1 @@
+// ligar api qqr uma que tenha um chat
