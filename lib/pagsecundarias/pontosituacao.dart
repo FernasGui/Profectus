@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:profectus/pagsecundarias/ranking.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/principalPage.dart';
 
 class PontoSituacaoPage extends StatefulWidget {
   @override
@@ -19,14 +20,20 @@ class _PontoSituacaoPageState extends State<PontoSituacaoPage> {
     });
 
     switch (index) {
-      case 0:
-       break; // Já está na página "Ponto de Situaçao"
-      case 1:
-        Navigator.pushReplacement(
+    case 0:
+       Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
         );
         break;
+  
+      case 1:
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PrincipalPage()),
+        );
+        break;
+       
       case 2:
         Navigator.pushReplacement(
           context,
@@ -51,7 +58,7 @@ class _PontoSituacaoPageState extends State<PontoSituacaoPage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('imagens/jmbranco.png', height: 50),
+            Image.asset('imagens/jmbranco.png', height: 40),
           ],
         ),
         centerTitle: true,
@@ -97,8 +104,8 @@ class _PontoSituacaoPageState extends State<PontoSituacaoPage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.add_home_work), label: 'Ponto de situação'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
+           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
+           BottomNavigationBarItem(icon: Icon(Icons.home), label:'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],
       ),

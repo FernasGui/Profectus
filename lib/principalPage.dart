@@ -16,7 +16,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _userName = 'Utilizador Anônimo';
   String _userEmail = 'No Email';
-  int _selectedIndex = 0;  // Controle da navegação
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -51,7 +51,6 @@ class _PrincipalPageState extends State<PrincipalPage> {
     );
   }
 
-  // Navegação pelo BottomNavigationBar
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -59,22 +58,13 @@ class _PrincipalPageState extends State<PrincipalPage> {
 
     switch (index) {
       case 0:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PontoSituacaoPage()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => PontoSituacaoPage()));
         break;
       case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ConfiguracaoPage()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
         break;
     }
   }
@@ -83,49 +73,47 @@ class _PrincipalPageState extends State<PrincipalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF358932),
         elevation: 0,
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image.asset('imagens/logo_profectus.png', height: 60),
+            Image.asset('imagens/logo_profectus.png', height: 40),
+            const SizedBox(width: 8),
             Expanded(
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  child: Image.asset('imagens/jmbranco.png', height: 50),
-                ),
+                child: Image.asset('imagens/jmbranco.png', height: 40),
               ),
-            ),
-            Stack(
-              alignment: Alignment.topRight,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.mail_outline, color: Colors.white),
-                  onPressed: () {},
-                ),
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text(
-                      '1',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
+        actions: [
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.mail_outline, color: Colors.white),
+                onPressed: () {},
+              ),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    '1',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-
-      // Conteúdo da Página
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -152,16 +140,13 @@ class _PrincipalPageState extends State<PrincipalPage> {
             ),
             const SizedBox(height: 20),
 
-            const Text(
-              'Objetivos Anuais',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text('Objetivos Anuais', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            LinearProgressIndicator(value: 0.7, backgroundColor: Colors.grey[300], color: const Color(0xFF358932)),
+            LinearProgressIndicator(value: 0.7, backgroundColor: Colors.grey, color: Color(0xFF358932)),
             const SizedBox(height: 10),
-            LinearProgressIndicator(value: 0.5, backgroundColor: Colors.grey[300], color: const Color(0xFF358932)),
+            LinearProgressIndicator(value: 0.5, backgroundColor: Colors.grey, color: Color(0xFF358932)),
             const SizedBox(height: 10),
-            LinearProgressIndicator(value: 0.2, backgroundColor: Colors.grey[300], color: const Color(0xFF358932)),
+            LinearProgressIndicator(value: 0.2, backgroundColor: Colors.grey, color: Color(0xFF358932)),
 
             Align(
               alignment: Alignment.centerRight,
@@ -171,10 +156,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => VerMaisPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
                 },
                 child: const Text('+ Ver Mais', style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
@@ -187,7 +169,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(color: const Color(0xFF358932), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: Color(0xFF358932), borderRadius: BorderRadius.circular(8)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -205,23 +187,30 @@ class _PrincipalPageState extends State<PrincipalPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                      fixedSize: const Size.fromHeight(80),
+                    ),
+                    onPressed: () {},
+                    child: const Text('Feedback Recebido\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
                   ),
-                  onPressed: () {},
-                  child: const Text('Feedback Recebido\nHistórico de Feedback',
-                      textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                      fixedSize: const Size.fromHeight(80),
+                    ),
+                    onPressed: () {},
+                    child: const Text('Feedback Dado\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
                   ),
-                  onPressed: () {},
-                  child: const Text('Feedback Dado\nHistórico de Feedback',
-                      textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
                 ),
               ],
             ),
@@ -230,18 +219,15 @@ class _PrincipalPageState extends State<PrincipalPage> {
 
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black),
-                borderRadius: BorderRadius.circular(8),
-              ),
+              decoration: BoxDecoration(border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(8)),
               child: const Text.rich(
                 TextSpan(
                   text: 'A Minha Situação Atual\n',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                   children: [
                     TextSpan(
-                      text: '\nEstá dentro dos objetivos anuais! Mas há sempre espaço para melhorar. Fale com o ProfectusBot!',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+                      text: '\nEstá dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
+                      style: TextStyle(fontSize: 14),
                     ),
                   ],
                 ),
@@ -250,16 +236,16 @@ class _PrincipalPageState extends State<PrincipalPage> {
           ],
         ),
       ),
-
-      // Barra de Navegação Inferior
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
+        selectedLabelStyle: TextStyle(fontSize: 10),
+        unselectedLabelStyle: TextStyle(fontSize: 10),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.add_home_work), label: 'Ponto de situação'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Ponto de Situação'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],

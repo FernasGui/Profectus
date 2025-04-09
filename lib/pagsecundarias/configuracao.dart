@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/autenticacao/loginPage.dart';
 import 'package:profectus/pagsecundarias/pontosituacao.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
+import 'package:profectus/principalPage.dart';
 
 class ConfiguracaoPage extends StatefulWidget {
   @override
@@ -30,11 +31,15 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
       case 1:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
+          MaterialPageRoute(builder: (context) => PrincipalPage()),
         );
         break;
       case 2:
-        break; // Já está na página "Configuração"
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
+  );
+        break;
     }
   }
 
@@ -91,7 +96,7 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('imagens/jmbranco.png', height: 50),
+            Image.asset('imagens/jmbranco.png', height: 40),
           ],
         ),
         actions: [
@@ -189,9 +194,9 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.add_home_work), label: 'Ponto de situação'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Ponto de situação'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],
       ),
     );

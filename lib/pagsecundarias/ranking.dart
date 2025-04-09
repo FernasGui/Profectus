@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:profectus/pagsecundarias/pontosituacao.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/principalPage.dart';
 
 class RankingPage extends StatefulWidget {
   @override
@@ -37,17 +38,19 @@ class _RankingPageState extends State<RankingPage> {
 
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => PontoSituacaoPage()),
-        );
-        break;
-      case 1:
-        Navigator.pushReplacement(
+       Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
         );
         break;
+  
+      case 1:
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PrincipalPage()),
+        );
+        break;
+       
       case 2:
         Navigator.pushReplacement(
           context,
@@ -170,8 +173,8 @@ class _RankingPageState extends State<RankingPage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.add_home_work), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Equipa'),
+           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
+           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],
       ),
