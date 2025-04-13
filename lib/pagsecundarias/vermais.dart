@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:profectus/pagsecundarias/pontosituacao.dart';
+import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 
@@ -21,7 +21,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
       case 0:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => PontoSituacaoPage()),
+          MaterialPageRoute(builder: (context) => DesafiosPage()),
         );
         break;
       case 1:
@@ -185,12 +185,12 @@ class _VerMaisPageState extends State<VerMaisPage> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
-        selectedLabelStyle: TextStyle(fontSize: 10),
-        unselectedLabelStyle: TextStyle(fontSize: 10),
+        selectedLabelStyle: TextStyle(fontSize: 14),
+        unselectedLabelStyle: TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Ponto de Situação'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],
