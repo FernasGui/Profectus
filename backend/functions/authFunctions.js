@@ -5,11 +5,9 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-// Função para registar novo utilizador
 exports.registerUser = functions.https.onCall(async (data) => {
   const { nome, email, password } = data;
 
-  // Validação dos dados de entrada
   if (!nome || !email || !password) {
     throw new functions.https.HttpsError(
       "invalid-argument",
@@ -18,24 +16,21 @@ exports.registerUser = functions.https.onCall(async (data) => {
   }
 
   try {
-    // Cria o utilizador no Firebase Authentication
     const userRecord = await admin.auth().createUser({
       email,
       password,
-      displayName: nome, // Atribui o nome ao utilizador
+      displayName: nome,
+    });
+
+    await admin.firestore().collection('users').doc(userRecord.uid).set({
+      nome: nome,
+      email: email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return { status: "success", userId: userRecord.uid };
   } catch (error) {
     console.error("Erro ao registar utilizador:", error);
-
-    if (error.code && error.code.startsWith("auth/")) {
-      throw new functions.https.HttpsError("aborted", error.message);
-    } else {
-      throw new functions.https.HttpsError(
-        "internal",
-        "Erro ao criar utilizador. Por favor, tente novamente mais tarde."
-      );
-    }
+    throw new functions.https.HttpsError("internal", "Erro ao criar utilizador.");
   }
 });

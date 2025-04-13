@@ -4,12 +4,12 @@ import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/principalPage.dart';
 
-class PontoSituacaoPage extends StatefulWidget {
+class DesafiosPage extends StatefulWidget {
   @override
-  _PontoSituacaoPageState createState() => _PontoSituacaoPageState();
+  _DesafiosPageState createState() => _DesafiosPageState();
 }
 
-class _PontoSituacaoPageState extends State<PontoSituacaoPage> {
+class _DesafiosPageState extends State<DesafiosPage> {
   bool _showPopup = true; // Controle de exibição do popup
   int _selectedIndex = 0; // Inicialização da barra inferior
 
@@ -101,6 +101,8 @@ class _PontoSituacaoPageState extends State<PontoSituacaoPage> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
+        selectedLabelStyle: TextStyle(fontSize: 14),
+        unselectedLabelStyle: TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [

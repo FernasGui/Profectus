@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:profectus/autenticacao/registerPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:profectus/principalPage.dart'; // Import da página principal
+import 'package:profectus/principalPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -15,27 +17,56 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _loginButtonPressed() async {
-    // Versão com autenticação no Firebase
-    /*
-    String email = emailController.text;
-    String password = passwordController.text;
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
     try {
-      // Tenta fazer o login com o e-mail e senha
-      UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(email: email, password: password);
-      print('Login bem-sucedido: ${userCredential.user}');
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => PrincipalPage()),
+      // Tenta fazer o login
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
+
+      // Vai buscar os dados do Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users') // Atenção que a coleção chama-se 'users'
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>;
+        String nome = userData['nome'] ?? 'Utilizador';
+
+        // Agora navega para a PrincipalPage COM o nome
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => PrincipalPage(nome: nome)),
+        );
+      } else {
+        // Caso o documento não exista, mostrar alerta
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Erro"),
+              content: const Text("Dados do utilizador não encontrados."),
+              actions: [
+                TextButton(
+                  child: const Text("Fechar"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      // Trata erros de autenticação
-      String errorMessage =
-          'Ocorreu um erro ao fazer login. Por favor, tente novamente.';
+      String errorMessage = 'Erro de autenticação.';
       if (e.code == 'user-not-found') {
         errorMessage = 'Nenhum utilizador encontrado para esse e-mail.';
       } else if (e.code == 'wrong-password') {
-        errorMessage = 'Senha incorreta fornecida para esse utilizador.';
+        errorMessage = 'Senha incorreta.';
       }
 
       // Mostra um diálogo de erro
@@ -57,12 +88,6 @@ class _LoginPageState extends State<LoginPage> {
         },
       );
     }
-    */
-
-    // Versão sem autenticação (direciona diretamente para a PrincipalPage)
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => PrincipalPage()),
-    );
   }
 
   @override
@@ -110,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               TextButton(
                 onPressed: () {
-                  // Placeholder para recuperação de senha
+                  // Aqui no futuro podes implementar a recuperação de senha
                 },
                 child: const Text(
                   'Esqueceu a senha?',
@@ -123,7 +148,9 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(color: Color(0xFF358932)),
                 ),
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPages()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => RegisterPages()),
+                  );
                 },
               ),
               const SizedBox(height: 20),

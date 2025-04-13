@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:profectus/pagsecundarias/pontosituacao.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/principalPage.dart';
@@ -170,6 +169,8 @@ class _RankingPageState extends State<RankingPage> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
+        selectedLabelStyle: TextStyle(fontSize: 14),
+        unselectedLabelStyle: TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
