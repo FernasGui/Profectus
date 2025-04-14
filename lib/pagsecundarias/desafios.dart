@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:profectus/pagsecundarias/ranking.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/pagsecundarias/mensagens.dart';
 import 'package:profectus/principalPage.dart';
 
 class DesafiosPage extends StatefulWidget {
@@ -10,35 +11,23 @@ class DesafiosPage extends StatefulWidget {
 }
 
 class _DesafiosPageState extends State<DesafiosPage> {
-  bool _showPopup = true; // Controle de exibição do popup
-  int _selectedIndex = 0; // Inicialização da barra inferior
+  bool _showPopup = true;
+  int _selectedIndex = 0;
 
-  // Navegação pelo BottomNavigationBar
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
     switch (index) {
-    case 0:
-       Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
-        );
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
         break;
-  
       case 1:
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => PrincipalPage()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
         break;
-       
       case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConfiguracaoPage()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
         break;
     }
   }
@@ -68,7 +57,12 @@ class _DesafiosPageState extends State<DesafiosPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MensagensPage()),
+                  );
+                },
               ),
               Positioned(
                 right: 6,
@@ -80,7 +74,7 @@ class _DesafiosPageState extends State<DesafiosPage> {
                     shape: BoxShape.circle,
                   ),
                   child: const Text(
-                    '1',
+                    '2',
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
@@ -89,32 +83,29 @@ class _DesafiosPageState extends State<DesafiosPage> {
           ),
         ],
       ),
-
       body: Stack(
         children: [
-          _buildMainContent(context), // Conteúdo principal
-          if (_showPopup) _buildPopup(context), // Popup de premiação
+          _buildMainContent(context),
+          if (_showPopup) _buildPopup(context),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
-        selectedLabelStyle: TextStyle(fontSize: 14),
-        unselectedLabelStyle: TextStyle(fontSize: 14),
+        selectedLabelStyle: const TextStyle(fontSize: 14),
+        unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
-           BottomNavigationBarItem(icon: Icon(Icons.home), label:'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
         ],
       ),
     );
   }
 
-  // Conteúdo principal da página
   Widget _buildMainContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -130,8 +121,6 @@ class _DesafiosPageState extends State<DesafiosPage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Gráfico de Barras
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -143,8 +132,6 @@ class _DesafiosPageState extends State<DesafiosPage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Botão "Veja a Classificação"
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -171,7 +158,6 @@ class _DesafiosPageState extends State<DesafiosPage> {
     );
   }
 
-  // Popup de Premiação
   Widget _buildPopup(BuildContext context) {
     return Center(
       child: Container(
@@ -241,7 +227,6 @@ class _DesafiosPageState extends State<DesafiosPage> {
     );
   }
 
-  // Gráfico de Barras Personalizado
   Widget _buildBar(double value, Color color, String label) {
     return Column(
       children: [

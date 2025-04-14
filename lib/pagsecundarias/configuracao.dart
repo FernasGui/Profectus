@@ -21,7 +21,7 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
   String _area = 'Desconhecido';
   String _departamento = 'Desconhecido';
   String _chefe = 'Desconhecido';
-  bool _isLoading = true; // <-- Adicionado para controlar o carregamento
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -34,7 +34,7 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
     if (user != null) {
       try {
         var userDoc = await FirebaseFirestore.instance
-            .collection('users') // Atenção aqui: 'users' com minúsculo!
+            .collection('users')
             .doc(user.uid)
             .get();
 
@@ -44,10 +44,10 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
           setState(() {
             _userName = userData['nome'] ?? 'Sem nome';
             _userEmail = user.email ?? 'No Email';
-            _anoEntrada = userData['anoEntrada'] ?? 'Desconhecido';
+            _anoEntrada = userData['anoEntrada']?.toString() ?? 'Desconhecido';
             _area = userData['area'] ?? 'Desconhecido';
             _departamento = userData['departamento'] ?? 'Desconhecido';
-            _chefe = userData['chefe'] ?? 'Desconhecido';
+            _chefe = userData['chefeDireto'] ?? 'Desconhecido';
             _isLoading = false;
           });
         } else {
@@ -126,14 +126,12 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.grey[300],
                     child: const Icon(Icons.person, size: 50, color: Colors.black),
                   ),
                   const SizedBox(height: 10),
-
                   Text(
                     _userName,
                     style: const TextStyle(
@@ -141,7 +139,6 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   Text(
                     _userEmail,
                     style: const TextStyle(
@@ -149,35 +146,27 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
                       color: Colors.grey,
                     ),
                   ),
-
                   const SizedBox(height: 20),
                   const Divider(thickness: 1),
-
                   _buildInfoTile(Icons.date_range, 'Ano de Entrada', _anoEntrada),
                   _buildInfoTile(Icons.business_center, 'Área', _area),
                   _buildInfoTile(Icons.apartment, 'Departamento', _departamento),
                   _buildInfoTile(Icons.supervisor_account, 'Chefe Direto', _chefe),
-
                   const Divider(thickness: 1),
                   const SizedBox(height: 20),
-
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     ),
-                    onPressed: () {
-                      // Ação para editar perfil
-                    },
+                    onPressed: () {},
                     icon: const Icon(Icons.edit, color: Colors.white),
                     label: const Text(
                       'Editar Perfil',
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,

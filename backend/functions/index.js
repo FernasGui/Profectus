@@ -20,3 +20,7 @@ const logger = require("firebase-functions/logger");
 const { registerUser } = require("./authFunctions");
 
 exports.registerUser = registerUser;
+
+const admin = require('firebase-admin');
+admin.initializeApp();
+

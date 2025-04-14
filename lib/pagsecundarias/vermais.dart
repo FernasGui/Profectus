@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/pagsecundarias/mensagens.dart';
 
 class VerMaisPage extends StatefulWidget {
   @override
@@ -9,9 +12,54 @@ class VerMaisPage extends StatefulWidget {
 }
 
 class _VerMaisPageState extends State<VerMaisPage> {
-  int _selectedIndex = 0; // Define "Ponto de situação" como selecionado
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  int _selectedIndex = 0;
 
-  // Navegação pelo BottomNavigationBar
+  String _userName = '';
+  String _userCargo = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserInfo();
+  }
+
+  void _getUserInfo() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        var userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          var userData = userDoc.data() as Map<String, dynamic>;
+
+          setState(() {
+            _userName = userData['nome'] ?? 'Sem nome';
+            _userCargo = userData['cargo'] ?? 'Sem cargo'; // <-- Adicionado
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _userName = 'Sem nome';
+            _userCargo = 'Sem cargo'; // <-- Adicionado
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        print('Erro ao buscar nome/cargo: $e');
+        setState(() {
+          _userName = 'Erro ao carregar';
+          _userCargo = 'Erro ao carregar'; // <-- Adicionado
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -57,13 +105,18 @@ class _VerMaisPageState extends State<VerMaisPage> {
             Image.asset('imagens/jmbranco.png', height: 40),
           ],
         ),
-      actions: [
+        actions: [
           Stack(
             alignment: Alignment.topRight,
             children: [
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MensagensPage()),
+                  );
+                },
               ),
               Positioned(
                 right: 6,
@@ -75,7 +128,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
                     shape: BoxShape.circle,
                   ),
                   child: const Text(
-                    '1',
+                    '2',
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
@@ -84,109 +137,96 @@ class _VerMaisPageState extends State<VerMaisPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Nome e Cargo
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Tomás Fernandes',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Trainee',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const Icon(Icons.person, size: 60),
-              ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            _userCargo, // <-- Aqui vai agora buscar o cargo certo
+                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const Icon(Icons.person, size: 60),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Objetivos Anuais',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildObjectiveProgress('Objetivo 1', 0.9),
+                  const SizedBox(height: 10),
+                  _buildObjectiveDetails(
+                    'Objetivo 1 - 10 contratos com novos clientes',
+                    'Falta apenas 1 contrato para atingir a sua meta anual!',
+                    'Está a ',
+                    '10%',
+                    ' de atingir o seu objetivo anual. O ideal seria estar a ',
+                    '0%',
+                    ' nesta altura do ano. Mas não desanime, o nosso ',
+                    'chatbot',
+                    ' pode ajudar!',
+                    Colors.yellow,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildObjectiveProgress('Objetivo 2', 0.8),
+                  const SizedBox(height: 10),
+                  _buildObjectiveDetails(
+                    'Objetivo 2 - Participar em 15 eventos de promoção da marca',
+                    'Faltam 3 eventos para atingir a sua meta anual!',
+                    'Está a ',
+                    '20%',
+                    ' de atingir o seu objetivo anual.',
+                    '',
+                    '',
+                    '',
+                    '',
+                    Colors.orange,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildObjectiveProgress('Objetivo 3', 0.5),
+                  const SizedBox(height: 10),
+                  _buildObjectiveDetails(
+                    'Objetivo 3 - Melhorar o desempenho da equipa',
+                    'Faltam algumas metas para serem atingidas!',
+                    'Está a ',
+                    '50%',
+                    ' de atingir o seu objetivo anual.',
+                    '',
+                    '',
+                    '',
+                    '',
+                    Colors.red,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-
-            // Data
-          Text(
-          'Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-          style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-            const SizedBox(height: 20),
-
-            // Objetivos Anuais
-            const Text(
-              'Objetivos Anuais',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            // Objetivo 1
-            _buildObjectiveProgress('Objetivo 1', 0.9),
-            const SizedBox(height: 10),
-            _buildObjectiveDetails(
-              'Objetivo 1 - 10 contratos com novos clientes',
-              'Falta apenas 1 contrato para atingir a sua meta anual!',
-              'Está a ',
-              '10%',
-              ' de atingir o seu objetivo anual. O ideal seria estar a ',
-              '0%',
-              ' nesta altura do ano. Mas não desanime, o nosso ',
-              'chatbot',
-              ' pode ajudar!',
-              Colors.yellow,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Objetivo 2
-            _buildObjectiveProgress('Objetivo 2', 0.8),
-            const SizedBox(height: 10),
-            _buildObjectiveDetails(
-              'Objetivo 2 - Participar em 15 eventos de promoção da marca',
-              'Faltam 3 eventos para atingir a sua meta anual!',
-              'Está a ',
-              '20%',
-              ' de atingir o seu objetivo anual.',
-              '',
-              '',
-              '',
-              '',
-              Colors.orange,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Objetivo 3
-            _buildObjectiveProgress('Objetivo 3', 0.5),
-            const SizedBox(height: 10),
-            _buildObjectiveDetails(
-              'Objetivo 3 - Melhorar o desempenho da equipa',
-              'Faltam algumas metas para serem atingidas!',
-              'Está a ',
-              '50%',
-              ' de atingir o seu objetivo anual.',
-              '',
-              '',
-              '',
-              '',
-              Colors.red,
-            ),
-          ],
-        ),
-      ),
-
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
-        selectedLabelStyle: TextStyle(fontSize: 14),
-        unselectedLabelStyle: TextStyle(fontSize: 14),
+        selectedLabelStyle: const TextStyle(fontSize: 14),
+        unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
@@ -198,7 +238,6 @@ class _VerMaisPageState extends State<VerMaisPage> {
     );
   }
 
-  // Barra de Progresso dos Objetivos
   Widget _buildObjectiveProgress(String title, double progress) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +254,6 @@ class _VerMaisPageState extends State<VerMaisPage> {
     );
   }
 
-  // Detalhes dos Objetivos
   Widget _buildObjectiveDetails(
     String title,
     String description,
