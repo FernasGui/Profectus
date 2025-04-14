@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/pagsecundarias/mensagens.dart';
 
 class VerMaisPage extends StatefulWidget {
   @override
@@ -15,6 +16,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
   int _selectedIndex = 0;
 
   String _userName = '';
+  String _userCargo = '';
   bool _isLoading = true;
 
   @override
@@ -28,7 +30,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
     if (user != null) {
       try {
         var userDoc = await FirebaseFirestore.instance
-            .collection('users') // Atenção ao nome da coleção
+            .collection('users')
             .doc(user.uid)
             .get();
 
@@ -37,18 +39,21 @@ class _VerMaisPageState extends State<VerMaisPage> {
 
           setState(() {
             _userName = userData['nome'] ?? 'Sem nome';
+            _userCargo = userData['cargo'] ?? 'Sem cargo'; // <-- Adicionado
             _isLoading = false;
           });
         } else {
           setState(() {
             _userName = 'Sem nome';
+            _userCargo = 'Sem cargo'; // <-- Adicionado
             _isLoading = false;
           });
         }
       } catch (e) {
-        print('Erro ao buscar nome: $e');
+        print('Erro ao buscar nome/cargo: $e');
         setState(() {
           _userName = 'Erro ao carregar';
+          _userCargo = 'Erro ao carregar'; // <-- Adicionado
           _isLoading = false;
         });
       }
@@ -106,7 +111,12 @@ class _VerMaisPageState extends State<VerMaisPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MensagensPage()),
+                  );
+                },
               ),
               Positioned(
                 right: 6,
@@ -118,7 +128,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
                     shape: BoxShape.circle,
                   ),
                   child: const Text(
-                    '1',
+                    '2',
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
@@ -144,9 +154,9 @@ class _VerMaisPageState extends State<VerMaisPage> {
                             _userName,
                             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                           ),
-                          const Text(
-                            'Trainee', // Mantém Trainee fixo por enquanto
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          Text(
+                            _userCargo, // <-- Aqui vai agora buscar o cargo certo
+                            style: const TextStyle(fontSize: 18, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -154,19 +164,16 @@ class _VerMaisPageState extends State<VerMaisPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
                   Text(
                     'Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
-
                   const Text(
                     'Objetivos Anuais',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-
                   _buildObjectiveProgress('Objetivo 1', 0.9),
                   const SizedBox(height: 10),
                   _buildObjectiveDetails(
@@ -182,7 +189,6 @@ class _VerMaisPageState extends State<VerMaisPage> {
                     Colors.yellow,
                   ),
                   const SizedBox(height: 20),
-
                   _buildObjectiveProgress('Objetivo 2', 0.8),
                   const SizedBox(height: 10),
                   _buildObjectiveDetails(
@@ -198,7 +204,6 @@ class _VerMaisPageState extends State<VerMaisPage> {
                     Colors.orange,
                   ),
                   const SizedBox(height: 20),
-
                   _buildObjectiveProgress('Objetivo 3', 0.5),
                   const SizedBox(height: 10),
                   _buildObjectiveDetails(

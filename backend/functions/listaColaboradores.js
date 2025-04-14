@@ -22,10 +22,11 @@ async function adicionarColaborador({
         chefeDireto: chefeDireto,
       }, { merge: true });
 
-    console.log('✅ Colaborador adicionado ou atualizado com sucesso!');
+    console.log(`✅ Colaborador ${nome} adicionado ou atualizado com sucesso!`);
   } catch (error) {
-    console.error('❌ Erro ao adicionar colaborador:', error);
+    console.error(`❌ Erro ao adicionar colaborador ${nome}:`, error);
   }
 }
 
+// 👉 AQUI é muito importante exportar certinho:
 module.exports = { adicionarColaborador };

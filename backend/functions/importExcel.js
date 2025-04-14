@@ -2,8 +2,13 @@ const admin = require('firebase-admin');
 const XLSX = require('xlsx');
 const { adicionarColaborador } = require('./listaColaboradores');
 
-// Inicializar Admin SDK (só se ainda não estiver)
-admin.initializeApp();
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://profectus-c8a3f.firebaseio.com"
+});
+
 
 async function importarExcelParaFirestore() {
   try {
@@ -16,16 +21,17 @@ async function importarExcelParaFirestore() {
     console.log(`📋 Foram encontrados ${colaboradores.length} colaboradores no ficheiro.`);
 
     for (const colaborador of colaboradores) {
-      await adicionarColaborador({
-        uid: colaborador.uid, // Atenção: tens de ter coluna "uid" no Excel
-        nome: colaborador.nome,
-        area: colaborador.area,
-        departamento: colaborador.departamento,
-        cargo: colaborador.cargo,
-        anoEntrada: colaborador.anoEntrada,
-        chefeDireto: colaborador.chefeDireto,
-      });
-    }
+        await adicionarColaborador({
+          uid: String(colaborador.uid), // garantir que é string
+          nome: colaborador.nome || '',
+          area: colaborador.area || '',
+          departamento: colaborador.departamento || '',
+          cargo: colaborador.cargo || '',
+          anoEntrada: colaborador.anoEntrada || '',
+          chefeDireto: colaborador.chefeDireto || '',
+        });
+      }
+      
 
     console.log('🚀 Todos os colaboradores foram importados com sucesso!');
   } catch (error) {
