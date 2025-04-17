@@ -88,7 +88,7 @@ class FeedbackRecebidoPage extends StatelessWidget {
                   ),
                 ],
               ),
-              trailing: const Icon(Icons.comment, color: Colors.black),
+              trailing: const Icon(Icons.add, color: Colors.black),
             ),
           );
         },

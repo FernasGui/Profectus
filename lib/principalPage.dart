@@ -7,6 +7,7 @@ import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/vermais.dart';
 import 'package:profectus/pagsecundarias/mensagens.dart';
 import 'package:profectus/pagsecundarias/feedbackrecebido.dart';
+import 'package:profectus/pagsecundarias/feedbackdado.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PrincipalPage extends StatefulWidget {
@@ -49,15 +50,8 @@ class _PrincipalPageState extends State<PrincipalPage> {
             _userEmail = user.email ?? 'No Email';
             _isLoading = false;
           });
-        } else {
-          setState(() {
-            _userName = 'Sem nome';
-            _userEmail = user.email ?? 'No Email';
-            _isLoading = false;
-          });
         }
       } catch (e) {
-        print('Erro ao buscar dados do utilizador: $e');
         setState(() {
           _userName = 'Erro ao carregar';
           _userEmail = 'No Email';
@@ -118,10 +112,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MensagensPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage()));
                 },
               ),
               Positioned(
@@ -129,14 +120,8 @@ class _PrincipalPageState extends State<PrincipalPage> {
                 top: 6,
                 child: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],
@@ -150,114 +135,15 @@ class _PrincipalPageState extends State<PrincipalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.black,
-                        child: Icon(Icons.person, color: Colors.white, size: 40),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _userName,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Objetivos Anuais', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.7, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.5, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.2, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF358932),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
-                      },
-                      child: const Text('+ Ver Mais', style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('ProfectusBot', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(color: Color(0xFF358932), borderRadius: BorderRadius.circular(8)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('imagens/bot.png', height: 40),
-                        const SizedBox(width: 10),
-                        const Text('Peça dicas de melhoria...', style: TextStyle(fontSize: 18, color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Feedback', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                            fixedSize: const Size.fromHeight(80),
-                          ),
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackRecebidoPage()));
-                          },
-                          child: const Text('Feedback Recebido\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                            fixedSize: const Size.fromHeight(80),
-                          ),
-                          onPressed: () {},
-                          child: const Text('Feedback Dado\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(8)),
-                    child: const Text.rich(
-                      TextSpan(
-                        text: 'A Minha Situação Atual\n',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-                        children: [
-                          TextSpan(
-                            text: '\nEstá dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildProfileSection(),
+                  const SizedBox(height: 16),
+                  _buildObjectivesCard(),
+                  const SizedBox(height: 16),
+                  _buildBotCard(),
+                  const SizedBox(height: 16),
+                  _buildFeedbackCard(),
+                  const SizedBox(height: 16),
+                  _buildSituationCard(),
                 ],
               ),
             ),
@@ -277,4 +163,177 @@ class _PrincipalPageState extends State<PrincipalPage> {
       ),
     );
   }
+
+Widget _buildProfileSection() {
+  return Center(
+    child: Column(
+      children: [
+        const CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.black,
+          child: Icon(Icons.person, color: Colors.white, size: 40),
+        ),
+        const SizedBox(height: 8), // menos espaço entre avatar e nome
+        Text(
+          _userName,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildObjectivesCard() {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), // <- reduzido o top padding (16 → 12)
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Objetivos Anuais', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6), // <- menos espaço entre título e primeiro objetivo
+          _buildProgressRow('Objetivo 1', 0.7),
+          const SizedBox(height: 8),
+          _buildProgressRow('Objetivo 2', 0.5),
+          const SizedBox(height: 8),
+          _buildProgressRow('Objetivo 3', 0.2),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
+              },
+              child: const Text('+ Ver Mais', style: TextStyle(color: Color(0xFF358932), fontSize: 12)),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget _buildProgressRow(String label, double value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 14)),
+              const SizedBox(height: 5),
+              LinearProgressIndicator(
+                value: value,
+                backgroundColor: Colors.grey[300],
+                color: const Color(0xFF358932),
+                minHeight: 8,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text('${(value * 100).toInt()}%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildBotCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF358932),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('imagens/bot.png', height: 40),
+            const SizedBox(width: 10),
+            const Text('Peça dicas de melhoria...', style: TextStyle(fontSize: 18, color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Feedback', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Column(
+              children: [
+                _buildFeedbackButton('Feedback Recebido', FeedbackRecebidoPage()),
+                const SizedBox(height: 10),
+                _buildFeedbackButton('Feedback Dado', FeedbackDadoPage()),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedbackButton(String text, Widget page) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF358932),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+        },
+        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
+      ),
+    );
+  }
+
+Widget _buildSituationCard() {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF358932),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'A Minha Situação Atual',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
+            style: TextStyle(fontSize: 14, color: Colors.white),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 }

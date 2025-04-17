@@ -170,7 +170,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Objetivos Anuais',
+                    'Objetivos',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
