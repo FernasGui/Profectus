@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/principalPage.dart';
@@ -9,7 +11,10 @@ class RankingPage extends StatefulWidget {
 }
 
 class _RankingPageState extends State<RankingPage> {
-  int _selectedIndex = 0; // Controla o item selecionado no BottomNavigationBar
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String _userCargo = '';
+  bool _isLoading = true;
+  int _selectedIndex = 0;
 
   final List<Map<String, String>> rankingData = [
     {'posicao': '1º Lugar', 'pontuacao': '19/25'},
@@ -29,27 +34,60 @@ class _RankingPageState extends State<RankingPage> {
     {'posicao': '15º Lugar', 'pontuacao': '3/25'},
   ];
 
-  // Função para navegar entre as páginas pelo BottomNavigationBar
+  @override
+  void initState() {
+    super.initState();
+    _getUserInfo();
+  }
+
+  void _getUserInfo() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        var userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          var userData = userDoc.data() as Map<String, dynamic>;
+          setState(() {
+            _userCargo = userData['cargo'] ?? '';
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   void _onItemTapped(int index) {
+    if (_userCargo == 'Trainee' && index == 0) return;
+
     setState(() {
       _selectedIndex = index;
     });
 
     switch (index) {
       case 0:
-       Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
         );
         break;
-  
       case 1:
-      Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PrincipalPage()),
         );
         break;
-       
       case 2:
         Navigator.pushReplacement(
           context,
@@ -105,80 +143,91 @@ class _RankingPageState extends State<RankingPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Text(
-                  'Ranking Mensal',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: rankingData.length,
-                itemBuilder: (context, index) {
-                  bool isHighlighted = index == 2; // Destacar o 3º lugar
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 5),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                     decoration: BoxDecoration(
-                      color: isHighlighted ? Colors.green : Colors.black,
+                      color: Colors.black,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: ListTile(
-                      title: Center(
-                        child: Text(
-                          rankingData[index]['posicao']!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      trailing: Text(
-                        rankingData[index]['pontuacao']!,
-                        style: const TextStyle(
+                    child: const Center(
+                      child: Text(
+                        'Ranking Mensal',
+                        style: TextStyle(
                           color: Colors.white,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      onTap: () {},
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: rankingData.length,
+                      itemBuilder: (context, index) {
+                        bool isHighlighted = index == 2;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          decoration: BoxDecoration(
+                            color: isHighlighted ? Colors.green : Colors.black,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ListTile(
+                            title: Center(
+                              child: Text(
+                                rankingData[index]['posicao']!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            trailing: Text(
+                              rankingData[index]['pontuacao']!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onTap: () {},
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
-        selectedLabelStyle: TextStyle(fontSize: 14),
-        unselectedLabelStyle: TextStyle(fontSize: 14),
+        selectedLabelStyle: const TextStyle(fontSize: 14),
+        unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
-           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
+        items: _buildNavigationItems(),
       ),
     );
+  }
+
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    List<BottomNavigationBarItem> items = [
+      const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+    ];
+
+    if (_userCargo != 'Trainee') {
+      items.insert(0, const BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'));
+    }
+
+    return items;
   }
 }

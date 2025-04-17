@@ -4,6 +4,8 @@ import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/mensagens.dart';
 import 'package:profectus/principalPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DesafiosPage extends StatefulWidget {
   @override
@@ -13,22 +15,50 @@ class DesafiosPage extends StatefulWidget {
 class _DesafiosPageState extends State<DesafiosPage> {
   bool _showPopup = true;
   int _selectedIndex = 0;
+  String _userCargo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserCargo();
+  }
+
+  void _getUserCargo() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      var doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        _userCargo = doc.data()?['cargo'] ?? '';
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
-        break;
-      case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
-        break;
-      case 2:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
-        break;
+    if (_userCargo == 'Trainee') {
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
+          break;
+        case 1:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
+    } else {
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
+          break;
+        case 1:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
+          break;
+        case 2:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
     }
   }
 
@@ -97,11 +127,16 @@ class _DesafiosPageState extends State<DesafiosPage> {
         unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
+        items: _userCargo == 'Trainee'
+            ? const [
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+              ]
+            : const [
+                BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha Equipa'),
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+              ],
       ),
     );
   }

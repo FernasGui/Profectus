@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
+import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/mensagens.dart';
 
 class VerMaisPage extends StatefulWidget {
@@ -13,11 +13,10 @@ class VerMaisPage extends StatefulWidget {
 
 class _VerMaisPageState extends State<VerMaisPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  int _selectedIndex = 0;
-
   String _userName = '';
   String _userCargo = '';
   bool _isLoading = true;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -36,24 +35,16 @@ class _VerMaisPageState extends State<VerMaisPage> {
 
         if (userDoc.exists) {
           var userData = userDoc.data() as Map<String, dynamic>;
-
           setState(() {
             _userName = userData['nome'] ?? 'Sem nome';
-            _userCargo = userData['cargo'] ?? 'Sem cargo'; // <-- Adicionado
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _userName = 'Sem nome';
-            _userCargo = 'Sem cargo'; // <-- Adicionado
+            _userCargo = userData['cargo'] ?? 'Sem cargo';
             _isLoading = false;
           });
         }
       } catch (e) {
-        print('Erro ao buscar nome/cargo: $e');
         setState(() {
           _userName = 'Erro ao carregar';
-          _userCargo = 'Erro ao carregar'; // <-- Adicionado
+          _userCargo = 'Erro ao carregar';
           _isLoading = false;
         });
       }
@@ -65,25 +56,24 @@ class _VerMaisPageState extends State<VerMaisPage> {
       _selectedIndex = index;
     });
 
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DesafiosPage()),
-        );
-        break;
-      case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
-        );
-        break;
-      case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConfiguracaoPage()),
-        );
-        break;
+    if (_userCargo == 'Trainee') {
+      if (index == 0) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+      } else if (index == 1) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+      }
+    } else {
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+          break;
+        case 1:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
+          break;
+        case 2:
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
     }
   }
 
@@ -95,9 +85,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -111,26 +99,15 @@ class _VerMaisPageState extends State<VerMaisPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MensagensPage()),
-                  );
-                },
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage())),
               ),
               Positioned(
                 right: 6,
                 top: 6,
                 child: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],
@@ -150,74 +127,29 @@ class _VerMaisPageState extends State<VerMaisPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _userName,
-                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            _userCargo, // <-- Aqui vai agora buscar o cargo certo
-                            style: const TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
+                          Text(_userName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                          Text(_userCargo, style: const TextStyle(fontSize: 18, color: Colors.grey)),
                         ],
                       ),
                       const Icon(Icons.person, size: 60),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
+                  Text('Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', style: const TextStyle(fontSize: 16, color: Colors.grey)),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Objetivos',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Objetivos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   _buildObjectiveProgress('Objetivo 1', 0.9),
                   const SizedBox(height: 10),
-                  _buildObjectiveDetails(
-                    'Objetivo 1 - 10 contratos com novos clientes',
-                    'Falta apenas 1 contrato para atingir a sua meta anual!',
-                    'Está a ',
-                    '10%',
-                    ' de atingir o seu objetivo anual. O ideal seria estar a ',
-                    '0%',
-                    ' nesta altura do ano. Mas não desanime, o nosso ',
-                    'chatbot',
-                    ' pode ajudar!',
-                    Colors.yellow,
-                  ),
+                  _buildObjectiveDetails('Objetivo 1 - 10 contratos com novos clientes', 'Falta apenas 1 contrato para atingir a sua meta anual!', 'Está a ', '10%', ' de atingir o seu objetivo anual. O ideal seria estar a ', '0%', ' nesta altura do ano. Mas não desanime, o nosso ', 'chatbot', ' pode ajudar!', Colors.yellow),
                   const SizedBox(height: 20),
                   _buildObjectiveProgress('Objetivo 2', 0.8),
                   const SizedBox(height: 10),
-                  _buildObjectiveDetails(
-                    'Objetivo 2 - Participar em 15 eventos de promoção da marca',
-                    'Faltam 3 eventos para atingir a sua meta anual!',
-                    'Está a ',
-                    '20%',
-                    ' de atingir o seu objetivo anual.',
-                    '',
-                    '',
-                    '',
-                    '',
-                    Colors.orange,
-                  ),
+                  _buildObjectiveDetails('Objetivo 2 - Participar em 15 eventos de promoção da marca', 'Faltam 3 eventos para atingir a sua meta anual!', 'Está a ', '20%', ' de atingir o seu objetivo anual.', '', '', '', '', Colors.orange),
                   const SizedBox(height: 20),
                   _buildObjectiveProgress('Objetivo 3', 0.5),
                   const SizedBox(height: 10),
-                  _buildObjectiveDetails(
-                    'Objetivo 3 - Melhorar o desempenho da equipa',
-                    'Faltam algumas metas para serem atingidas!',
-                    'Está a ',
-                    '50%',
-                    ' de atingir o seu objetivo anual.',
-                    '',
-                    '',
-                    '',
-                    '',
-                    Colors.red,
-                  ),
+                  _buildObjectiveDetails('Objetivo 3 - Melhorar o desempenho da equipa', 'Faltam algumas metas para serem atingidas!', 'Está a ', '50%', ' de atingir o seu objetivo anual.', '', '', '', '', Colors.red),
                 ],
               ),
             ),
@@ -229,13 +161,20 @@ class _VerMaisPageState extends State<VerMaisPage> {
         unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
+        items: _buildNavigationItems(),
       ),
     );
+  }
+
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    List<BottomNavigationBarItem> items = [
+      const BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
+      const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+    ];
+    if (_userCargo != 'Trainee') {
+      items.insert(1, const BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'));
+    }
+    return items;
   }
 
   Widget _buildObjectiveProgress(String title, double progress) {
@@ -275,10 +214,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 10),
           Text(description, style: const TextStyle(fontSize: 14, color: Colors.white)),
           const SizedBox(height: 10),
@@ -286,10 +222,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
             text: TextSpan(
               children: [
                 TextSpan(text: prefix, style: const TextStyle(color: Colors.white)),
-                TextSpan(
-                  text: highlight,
-                  style: TextStyle(color: highlightColor, fontWeight: FontWeight.bold),
-                ),
+                TextSpan(text: highlight, style: TextStyle(color: highlightColor, fontWeight: FontWeight.bold)),
                 TextSpan(text: suffix, style: const TextStyle(color: Colors.white)),
               ],
             ),

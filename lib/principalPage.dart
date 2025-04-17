@@ -23,6 +23,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _userName = '';
   String _userEmail = '';
+  String _userCargo = '';
   int _selectedIndex = 0;
   bool _isLoading = true;
 
@@ -44,9 +45,11 @@ class _PrincipalPageState extends State<PrincipalPage> {
         if (userDoc.exists) {
           var userData = userDoc.data() as Map<String, dynamic>;
           String nome = userData['nome'] ?? 'Sem nome';
+          String cargo = userData['cargo'] ?? '';
 
           setState(() {
             _userName = nome;
+            _userCargo = cargo;
             _userEmail = user.email ?? 'No Email';
             _isLoading = false;
           });
@@ -69,11 +72,21 @@ class _PrincipalPageState extends State<PrincipalPage> {
     );
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+void _onItemTapped(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
 
+  if (_userCargo == 'Trainee') {
+    switch (index) {
+      case 0:
+        Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+        break;
+      case 1:
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+        break;
+    }
+  } else {
     switch (index) {
       case 0:
         Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
@@ -86,6 +99,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
         break;
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +161,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
                 ],
               ),
             ),
-      bottomNavigationBar: BottomNavigationBar(
+   bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
@@ -155,32 +169,45 @@ class _PrincipalPageState extends State<PrincipalPage> {
         unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
+        items: _buildNavigationItems(),
       ),
     );
   }
 
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    List<BottomNavigationBarItem> items = [
+      const BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
+      const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+    ];
+
+    if (_userCargo != 'Trainee') {
+      items.insert(1, const BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'));
+    }
+
+    return items;
+  }
+
 Widget _buildProfileSection() {
-  return Center(
-    child: Column(
-      children: [
-        const CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.black,
-          child: Icon(Icons.person, color: Colors.white, size: 40),
-        ),
-        const SizedBox(height: 8), // menos espaço entre avatar e nome
-        Text(
-          _userName,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ),
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      const CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.black,
+        child: Icon(Icons.person, color: Colors.white, size: 40),
+      ),
+      const SizedBox(width: 10),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _userName,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.left,
+          ),
+        ],
+      ),
+    ],
   );
 }
 
