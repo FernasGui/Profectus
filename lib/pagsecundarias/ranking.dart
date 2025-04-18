@@ -15,84 +15,60 @@ class _RankingPageState extends State<RankingPage> {
   String _userCargo = '';
   bool _isLoading = true;
   int _selectedIndex = 0;
-
-  final List<Map<String, String>> rankingData = [
-    {'posicao': '1º Lugar', 'pontuacao': '19/25'},
-    {'posicao': '2º Lugar', 'pontuacao': '18/25'},
-    {'posicao': '3º Lugar', 'pontuacao': '15/25'},
-    {'posicao': '4º Lugar', 'pontuacao': '14/25'},
-    {'posicao': '5º Lugar', 'pontuacao': '13/25'},
-    {'posicao': '6º Lugar', 'pontuacao': '12/25'},
-    {'posicao': '7º Lugar', 'pontuacao': '11/25'},
-    {'posicao': '8º Lugar', 'pontuacao': '10/25'},
-    {'posicao': '9º Lugar', 'pontuacao': '9/25'},
-    {'posicao': '10º Lugar', 'pontuacao': '8/25'},
-    {'posicao': '11º Lugar', 'pontuacao': '7/25'},
-    {'posicao': '12º Lugar', 'pontuacao': '6/25'},
-    {'posicao': '13º Lugar', 'pontuacao': '5/25'},
-    {'posicao': '14º Lugar', 'pontuacao': '4/25'},
-    {'posicao': '15º Lugar', 'pontuacao': '3/25'},
-  ];
+  List<Map<String, dynamic>> _rankingData = [];
+  String _currentUserId = '';
 
   @override
   void initState() {
     super.initState();
-    _getUserInfo();
+    _loadRankingData();
   }
 
-  void _getUserInfo() async {
+  Future<void> _loadRankingData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      try {
-        var userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+      _currentUserId = user.uid;
+      var usersSnapshot = await FirebaseFirestore.instance.collection('users').get();
 
-        if (userDoc.exists) {
-          var userData = userDoc.data() as Map<String, dynamic>;
-          setState(() {
-            _userCargo = userData['cargo'] ?? '';
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _isLoading = false;
+      List<Map<String, dynamic>> data = [];
+
+      for (var userDoc in usersSnapshot.docs) {
+        var objetivosSnapshot = await userDoc.reference.collection('objetivos').get();
+        int completed = objetivosSnapshot.docs
+            .where((doc) => (doc.data()['pontos'] ?? 0) >= 100)
+            .length;
+
+        data.add({
+          'uid': userDoc.id,
+          'nome': userDoc.data()['nome'] ?? 'Sem Nome',
+          'completos': completed
         });
       }
+
+      data.sort((a, b) => b['completos'].compareTo(a['completos']));
+
+      setState(() {
+        _rankingData = data;
+        _userCargo = usersSnapshot.docs.firstWhere((d) => d.id == _currentUserId).data()['cargo'] ?? '';
+        _isLoading = false;
+      });
     }
   }
 
   void _onItemTapped(int index) {
-    if (_userCargo == 'Trainee' && index == 0) return;
-
     setState(() {
       _selectedIndex = index;
     });
 
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MinhaEquipaPage()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
         break;
       case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => PrincipalPage()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
         break;
       case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConfiguracaoPage()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
         break;
     }
   }
@@ -105,9 +81,7 @@ class _RankingPageState extends State<RankingPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -129,14 +103,8 @@ class _RankingPageState extends State<RankingPage> {
                 top: 6,
                 child: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '1',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],
@@ -170,19 +138,20 @@ class _RankingPageState extends State<RankingPage> {
                   const SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: rankingData.length,
+                      itemCount: _rankingData.length,
                       itemBuilder: (context, index) {
-                        bool isHighlighted = index == 2;
+                        var user = _rankingData[index];
+                        bool isCurrentUser = user['uid'] == _currentUserId;
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
                           decoration: BoxDecoration(
-                            color: isHighlighted ? Colors.green : Colors.black,
+                            color: isCurrentUser ? Colors.green : Colors.black,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: ListTile(
                             title: Center(
                               child: Text(
-                                rankingData[index]['posicao']!,
+                                '${index + 1}º Lugar',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -190,13 +159,12 @@ class _RankingPageState extends State<RankingPage> {
                               ),
                             ),
                             trailing: Text(
-                              rankingData[index]['pontuacao']!,
+                              '${user['completos']} objetivos',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            onTap: () {},
                           ),
                         );
                       },

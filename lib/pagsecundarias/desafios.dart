@@ -13,22 +13,43 @@ class DesafiosPage extends StatefulWidget {
 }
 
 class _DesafiosPageState extends State<DesafiosPage> {
-  bool _showPopup = true;
   int _selectedIndex = 0;
   String _userCargo = '';
+  bool _showPopup = false;
+  List<int> _completedObjectiveIndexes = [];
+  List<Map<String, dynamic>> _objetivos = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _getUserCargo();
+    _loadData();
   }
 
-  void _getUserCargo() async {
+  void _loadData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       var doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      var objetivosSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('objetivos')
+          .orderBy('descricao')
+          .get();
+
+      var objetivos = objetivosSnapshot.docs.map((doc) => doc.data()).toList();
+      var completedIndexes = <int>[];
+      for (int i = 0; i < objetivos.length; i++) {
+        if ((objetivos[i]['pontos'] ?? 0) >= 100) {
+          completedIndexes.add(i);
+        }
+      }
+
       setState(() {
         _userCargo = doc.data()?['cargo'] ?? '';
+        _objetivos = objetivos;
+        _completedObjectiveIndexes = completedIndexes;
+        _showPopup = completedIndexes.isNotEmpty;
       });
     }
   }
@@ -70,9 +91,7 @@ class _DesafiosPageState extends State<DesafiosPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -99,14 +118,8 @@ class _DesafiosPageState extends State<DesafiosPage> {
                 top: 6,
                 child: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],
@@ -142,58 +155,67 @@ class _DesafiosPageState extends State<DesafiosPage> {
   }
 
   Widget _buildMainContent(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          const Text(
-            'Os meus desafios',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildBar(0.8, Colors.lightGreen, 'Desafio 1'),
-                _buildBar(0.5, Colors.green, 'Desafio 2'),
-                _buildBar(0.7, Colors.teal, 'Desafio 3'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RankingPage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-            ),
-            child: const Text(
-              'Veja a Classificação',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+    final colors = [
+      Colors.lightGreen,
+      Colors.green,
+      Colors.teal,
+      Colors.blue,
+      Colors.indigo,
+      Colors.purple,
+      Colors.deepPurple,
+      Colors.cyan,
+      Colors.tealAccent,
+      Colors.lime,
+    ];
+
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        const Text('Os meus desafios', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(_objetivos.length, (index) {
+                  var obj = _objetivos[index];
+                  var pontos = (obj['pontos'] ?? 0).toDouble();
+                  var progress = (pontos / 100).clamp(0.0, 1.0);
+                  var color = colors[index % colors.length];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: _buildBar(progress, color, 'Objetivo ${index + 1}'),
+                  );
+                }),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-        ],
-      ),
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => RankingPage()));
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+          ),
+          child: const Text('Veja a Classificação', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 
   Widget _buildPopup(BuildContext context) {
+    String objetivosText = _completedObjectiveIndexes.map((i) => 'Objetivo ${i + 1}').join(' e ');
+
     return Center(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
@@ -201,58 +223,26 @@ class _DesafiosPageState extends State<DesafiosPage> {
         decoration: BoxDecoration(
           color: const Color(0xFFE8F5E9),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
         ),
         child: Stack(
+          alignment: Alignment.center,
           children: [
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Parabéns!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
+                const Text('Parabéns!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
                 const SizedBox(height: 10),
-                const Text(
-                  'Atingiu mais uma meta!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text('Completou ${_completedObjectiveIndexes.length == 1 ? 'o' : 'os'} $objetivosText!', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
                 Image.asset('imagens/TROFEU.png', height: 100),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    'Está em 3º lugar no Ranking mensal',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ),
-                const SizedBox(height: 10),
               ],
             ),
             Positioned(
               right: 0,
               top: 0,
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showPopup = false;
-                  });
-                },
+                onTap: () => setState(() => _showPopup = false),
                 child: const Icon(Icons.close, color: Colors.black),
               ),
             ),
@@ -264,15 +254,34 @@ class _DesafiosPageState extends State<DesafiosPage> {
 
   Widget _buildBar(double value, Color color, String label) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Expanded(
-          child: Container(
-            width: 50,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            height: 200 * value,
+        SizedBox(
+          width: 60,
+          height: MediaQuery.of(context).size.height * 0.55,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              Container(
+                width: 60,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  width: 60,
+                  height: (MediaQuery.of(context).size.height * 0.55) * value,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),

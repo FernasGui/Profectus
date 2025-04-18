@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/autenticacao/loginPage.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
@@ -8,7 +9,6 @@ import 'package:profectus/pagsecundarias/vermais.dart';
 import 'package:profectus/pagsecundarias/mensagens.dart';
 import 'package:profectus/pagsecundarias/feedbackrecebido.dart';
 import 'package:profectus/pagsecundarias/feedbackdado.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PrincipalPage extends StatefulWidget {
   final String? nome;
@@ -26,6 +26,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   String _userCargo = '';
   int _selectedIndex = 0;
   bool _isLoading = true;
+  List<Map<String, dynamic>> _objetivos = [];
 
   @override
   void initState() {
@@ -37,20 +38,29 @@ class _PrincipalPageState extends State<PrincipalPage> {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        var userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
+        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
           var userData = userDoc.data() as Map<String, dynamic>;
           String nome = userData['nome'] ?? 'Sem nome';
           String cargo = userData['cargo'] ?? '';
 
+          var snapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('objetivos')
+              .get();
+
           setState(() {
             _userName = nome;
             _userCargo = cargo;
             _userEmail = user.email ?? 'No Email';
+            _objetivos = snapshot.docs.asMap().entries.map((entry) {
+              return {
+                ...entry.value.data(),
+                'numero': entry.key + 1
+              };
+            }).toList();
+            _objetivos.sort((a, b) => (b['pontos'] ?? 0).compareTo(a['pontos'] ?? 0));
             _isLoading = false;
           });
         }
@@ -64,42 +74,34 @@ class _PrincipalPageState extends State<PrincipalPage> {
     }
   }
 
-  void _logout() async {
-    await _auth.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
-  }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
 
-void _onItemTapped(int index) {
-  setState(() {
-    _selectedIndex = index;
-  });
-
-  if (_userCargo == 'Trainee') {
-    switch (index) {
-      case 0:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
-        break;
-      case 1:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
-        break;
-    }
-  } else {
-    switch (index) {
-      case 0:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
-        break;
-      case 1:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
-        break;
-      case 2:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
-        break;
+    if (_userCargo == 'Trainee') {
+      switch (index) {
+        case 0:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+          break;
+        case 1:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
+    } else {
+      switch (index) {
+        case 0:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+          break;
+        case 1:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
+          break;
+        case 2:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +163,7 @@ void _onItemTapped(int index) {
                 ],
               ),
             ),
-   bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
@@ -187,83 +189,83 @@ void _onItemTapped(int index) {
     return items;
   }
 
-Widget _buildProfileSection() {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      const CircleAvatar(
-        radius: 30,
-        backgroundColor: Colors.black,
-        child: Icon(Icons.person, color: Colors.white, size: 40),
-      ),
-      const SizedBox(width: 10),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _userName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.left,
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-Widget _buildObjectivesCard() {
-  return Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), // <- reduzido o top padding (16 → 12)
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Objetivos Anuais', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6), // <- menos espaço entre título e primeiro objetivo
-          _buildProgressRow('Objetivo 1', 0.7),
-          const SizedBox(height: 8),
-          _buildProgressRow('Objetivo 2', 0.5),
-          const SizedBox(height: 8),
-          _buildProgressRow('Objetivo 3', 0.2),
-          const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
-              },
-              child: const Text('+ Ver Mais', style: TextStyle(color: Color(0xFF358932), fontSize: 12)),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-  Widget _buildProgressRow(String label, double value) {
+  Widget _buildProfileSection() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 14)),
-              const SizedBox(height: 5),
-              LinearProgressIndicator(
-                value: value,
-                backgroundColor: Colors.grey[300],
-                color: const Color(0xFF358932),
-                minHeight: 8,
-              ),
-            ],
-          ),
+        const CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.black,
+          child: Icon(Icons.person, color: Colors.white, size: 40),
         ),
         const SizedBox(width: 10),
-        Text('${(value * 100).toInt()}%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _userName,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.left,
+            ),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildObjectivesCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Objetivos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            ..._objetivos.take(3).map((obj) {
+              final numero = obj['numero'] ?? 0;
+              final pontos = (obj['pontos'] ?? 0).toDouble();
+              final percentagem = (pontos / 100).clamp(0.0, 1.0);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Objetivo $numero', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 5),
+                          LinearProgressIndicator(
+                            value: percentagem,
+                            backgroundColor: Colors.grey[400],
+                            color: const Color(0xFF358932),
+                            minHeight: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('${(percentagem * 100).toInt()}%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              );
+            }),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
+                },
+                child: const Text('+ Ver Mais', style: TextStyle(color: Color(0xFF358932), fontSize: 12)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -331,36 +333,35 @@ Widget _buildObjectivesCard() {
     );
   }
 
-Widget _buildSituationCard() {
-  return Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF358932),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'A Minha Situação Atual',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+  Widget _buildSituationCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF358932),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'A Minha Situação Atual',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
-            style: TextStyle(fontSize: 14, color: Colors.white),
-          ),
-        ],
+            SizedBox(height: 8),
+            Text(
+              'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
