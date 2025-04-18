@@ -13,7 +13,7 @@ class ConfiguracaoPage extends StatefulWidget {
 
 class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  int _selectedIndex = 2;
+  int _selectedIndex = 1;
 
   String _userName = '';
   String _userEmail = '';
@@ -21,6 +21,7 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
   String _area = 'Desconhecido';
   String _departamento = 'Desconhecido';
   String _chefe = 'Desconhecido';
+  String _userCargo = '';
   bool _isLoading = true;
 
   @override
@@ -48,7 +49,13 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
             _area = userData['area'] ?? 'Desconhecido';
             _departamento = userData['departamento'] ?? 'Desconhecido';
             _chefe = userData['chefeDireto'] ?? 'Desconhecido';
+            _userCargo = userData['cargo'] ?? '';
             _isLoading = false;
+
+            // Ajustar o índice caso o utilizador seja Trainee e "Minha equipa" não deva ser mostrado
+            if (_userCargo == 'Trainee' && _selectedIndex == 2) {
+              _selectedIndex = 1;
+            }
           });
         } else {
           setState(() {
@@ -73,6 +80,8 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
   }
 
   void _onItemTapped(int index) {
+    if (_userCargo == 'Trainee' && index == 2) return;
+
     setState(() {
       _selectedIndex = index;
     });
@@ -190,13 +199,22 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
         unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
-        ],
+        items: _buildNavigationItems(),
       ),
     );
+  }
+
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    List<BottomNavigationBarItem> items = [
+      const BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
+      const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+    ];
+
+    if (_userCargo != 'Trainee') {
+      items.add(const BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'));
+    }
+
+    return items;
   }
 
   Widget _buildInfoTile(IconData icon, String title, String subtitle) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/autenticacao/loginPage.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
@@ -7,7 +8,7 @@ import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/vermais.dart';
 import 'package:profectus/pagsecundarias/mensagens.dart';
 import 'package:profectus/pagsecundarias/feedbackrecebido.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:profectus/pagsecundarias/feedbackdado.dart';
 
 class PrincipalPage extends StatefulWidget {
   final String? nome;
@@ -22,8 +23,10 @@ class _PrincipalPageState extends State<PrincipalPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _userName = '';
   String _userEmail = '';
+  String _userCargo = '';
   int _selectedIndex = 0;
   bool _isLoading = true;
+  List<Map<String, dynamic>> _objetivos = [];
 
   @override
   void initState() {
@@ -35,29 +38,33 @@ class _PrincipalPageState extends State<PrincipalPage> {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        var userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
+        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
           var userData = userDoc.data() as Map<String, dynamic>;
           String nome = userData['nome'] ?? 'Sem nome';
+          String cargo = userData['cargo'] ?? '';
+
+          var snapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('objetivos')
+              .get();
 
           setState(() {
             _userName = nome;
+            _userCargo = cargo;
             _userEmail = user.email ?? 'No Email';
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _userName = 'Sem nome';
-            _userEmail = user.email ?? 'No Email';
+            _objetivos = snapshot.docs.asMap().entries.map((entry) {
+              return {
+                ...entry.value.data(),
+                'numero': entry.key + 1
+              };
+            }).toList();
+            _objetivos.sort((a, b) => (b['pontos'] ?? 0).compareTo(a['pontos'] ?? 0));
             _isLoading = false;
           });
         }
       } catch (e) {
-        print('Erro ao buscar dados do utilizador: $e');
         setState(() {
           _userName = 'Erro ao carregar';
           _userEmail = 'No Email';
@@ -67,29 +74,32 @@ class _PrincipalPageState extends State<PrincipalPage> {
     }
   }
 
-  void _logout() async {
-    await _auth.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    switch (index) {
-      case 0:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
-        break;
-      case 1:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
-        break;
-      case 2:
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
-        break;
+    if (_userCargo == 'Trainee') {
+      switch (index) {
+        case 0:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+          break;
+        case 1:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
+    } else {
+      switch (index) {
+        case 0:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+          break;
+        case 1:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => MinhaEquipaPage()));
+          break;
+        case 2:
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+          break;
+      }
     }
   }
 
@@ -118,10 +128,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MensagensPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage()));
                 },
               ),
               Positioned(
@@ -129,14 +136,8 @@ class _PrincipalPageState extends State<PrincipalPage> {
                 top: 6,
                 child: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],
@@ -150,114 +151,15 @@ class _PrincipalPageState extends State<PrincipalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.black,
-                        child: Icon(Icons.person, color: Colors.white, size: 40),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _userName,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Objetivos Anuais', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.7, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.5, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(value: 0.2, backgroundColor: Colors.grey, color: Color(0xFF358932)),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF358932),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
-                      },
-                      child: const Text('+ Ver Mais', style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('ProfectusBot', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(color: Color(0xFF358932), borderRadius: BorderRadius.circular(8)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('imagens/bot.png', height: 40),
-                        const SizedBox(width: 10),
-                        const Text('Peça dicas de melhoria...', style: TextStyle(fontSize: 18, color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Feedback', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                            fixedSize: const Size.fromHeight(80),
-                          ),
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackRecebidoPage()));
-                          },
-                          child: const Text('Feedback Recebido\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                            fixedSize: const Size.fromHeight(80),
-                          ),
-                          onPressed: () {},
-                          child: const Text('Feedback Dado\nHistórico de Feedback', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(8)),
-                    child: const Text.rich(
-                      TextSpan(
-                        text: 'A Minha Situação Atual\n',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-                        children: [
-                          TextSpan(
-                            text: '\nEstá dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildProfileSection(),
+                  const SizedBox(height: 16),
+                  _buildObjectivesCard(),
+                  const SizedBox(height: 16),
+                  _buildBotCard(),
+                  const SizedBox(height: 16),
+                  _buildFeedbackCard(),
+                  const SizedBox(height: 16),
+                  _buildSituationCard(),
                 ],
               ),
             ),
@@ -269,11 +171,196 @@ class _PrincipalPageState extends State<PrincipalPage> {
         unselectedLabelStyle: const TextStyle(fontSize: 14),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
+        items: _buildNavigationItems(),
+      ),
+    );
+  }
+
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    List<BottomNavigationBarItem> items = [
+      const BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
+      const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
+    ];
+
+    if (_userCargo != 'Trainee') {
+      items.insert(1, const BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Minha equipa'));
+    }
+
+    return items;
+  }
+
+  Widget _buildProfileSection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.black,
+          child: Icon(Icons.person, color: Colors.white, size: 40),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _userName,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.left,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildObjectivesCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Objetivos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            ..._objetivos.take(3).map((obj) {
+              final numero = obj['numero'] ?? 0;
+              final pontos = (obj['pontos'] ?? 0).toDouble();
+              final percentagem = (pontos / 100).clamp(0.0, 1.0);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Objetivo $numero', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 5),
+                          LinearProgressIndicator(
+                            value: percentagem,
+                            backgroundColor: Colors.grey[400],
+                            color: const Color(0xFF358932),
+                            minHeight: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('${(percentagem * 100).toInt()}%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              );
+            }),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => VerMaisPage()));
+                },
+                child: const Text('+ Ver Mais', style: TextStyle(color: Color(0xFF358932), fontSize: 12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBotCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF358932),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('imagens/bot.png', height: 40),
+            const SizedBox(width: 10),
+            const Text('Peça dicas de melhoria...', style: TextStyle(fontSize: 18, color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Feedback', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Column(
+              children: [
+                _buildFeedbackButton('Feedback Recebido', FeedbackRecebidoPage()),
+                const SizedBox(height: 10),
+                _buildFeedbackButton('Feedback Dado', FeedbackDadoPage()),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedbackButton(String text, Widget page) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF358932),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+        },
+        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
+      ),
+    );
+  }
+
+  Widget _buildSituationCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF358932),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'A Minha Situação Atual',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
