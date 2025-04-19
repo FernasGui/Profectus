@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
-import 'package:profectus/pagsecundarias/mensagens.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 
 class VerMaisPage extends StatefulWidget {
   @override

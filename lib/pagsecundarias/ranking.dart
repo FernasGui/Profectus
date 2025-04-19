@@ -158,13 +158,6 @@ class _RankingPageState extends State<RankingPage> {
                                 ),
                               ),
                             ),
-                            trailing: Text(
-                              '${user['completos']} objetivos',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
                         );
                       },

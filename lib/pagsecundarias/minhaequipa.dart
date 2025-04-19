@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
-import 'package:profectus/pagsecundarias/mensagens.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 import 'package:profectus/principalPage.dart';
 
 class MinhaEquipaPage extends StatefulWidget {

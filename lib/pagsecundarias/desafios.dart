@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:profectus/pagsecundarias/ranking.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
-import 'package:profectus/pagsecundarias/mensagens.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 import 'package:profectus/principalPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
