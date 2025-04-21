@@ -19,14 +19,24 @@ async function importarObjetivos() {
 
     for (const objetivo of objetivos) {
       const uid = String(objetivo.Id_colaborador);
+      const numero = objetivo.Número || 0;
       const descricao = objetivo.Objetivos || '';
-      const pontos = objetivo.Pontos || 0;
-      const prazo = objetivo.Prazo || '';
-      const data = objetivo.Data;
+      const meta = objetivo.Meta || 0;
       const hora = objetivo.Hora;
+      const dataCriacao = objetivo.DataCriacao;
+      const dataLimite = objetivo.DataLimite;
+      const progressoAtual = objetivo.ProgressoAtual || 0;
+      const progressoRelativo = objetivo.ProgressoRelativo || 0;
+      const diasRestantes = objetivo.DiasRestantes || 0;
+      const diasPassados = objetivo.DiasPassados || 0;
+      const previsao = objetivo['Previsão'] || '';
+      const estadoAtual = objetivo.EstadoAtual || '';
+      const esperado = objetivo['%Esperado(dias)'] || 0;
+      const desvio = objetivo.DesviovsEsperado || 0;
+      const pontoSituacao = objetivo.PontodeSituação || '';
+      const resultado = objetivo.Resultado || '';
 
-      // Verifica se o colaborador existe
-      const userRef = admin.firestore().collection('users').doc(uid);
+      const userRef = db.collection('users').doc(uid);
       const userSnap = await userRef.get();
 
       if (!userSnap.exists) {
@@ -34,24 +44,31 @@ async function importarObjetivos() {
         continue;
       }
 
-      // Combinar data e hora corretamente
-      const dataObj = new Date(`${formatarData(data)}T${formatarHora(hora)}:00`);
-
+      const dataHora = new Date(`${formatarData(dataLimite)}T${formatarHora(hora)}:00`);
       const objetivosRef = userRef.collection('objetivos');
-      const snapshot = await objetivosRef.where('dataLimite', '==', dataObj).get();
+      const snapshot = await objetivosRef.where('dataLimite', '==', admin.firestore.Timestamp.fromDate(dataHora)).get();
 
       if (!snapshot.empty) {
-        console.log(`⚠️ Objetivo com dataLimite "${dataObj}" já existe para ${uid}. Ignorado.`);
+        console.log(`⚠️ Objetivo com data "${dataHora}" já existe para ${uid}. Ignorado.`);
         continue;
       }
 
       await objetivosRef.add({
+        numero,
         descricao,
-        pontos,
-        prazo,
-        progresso: 0,
-        criadoEm: admin.firestore.Timestamp.now(),
-        dataLimite: admin.firestore.Timestamp.fromDate(dataObj),
+        meta,
+        progresso: progressoAtual,
+        progressoRelativo,
+        diasRestantes,
+        diasPassados,
+        previsao,
+        estadoAtual,
+        esperado,
+        desvio,
+        pontoSituacao,
+        resultado,
+        criadoEm: admin.firestore.Timestamp.fromDate(new Date(dataCriacao)),
+        dataLimite: admin.firestore.Timestamp.fromDate(dataHora),
       });
 
       console.log(`✅ Objetivo adicionado para colaborador ${uid}`);
@@ -63,20 +80,18 @@ async function importarObjetivos() {
   }
 }
 
-// Funções auxiliares
 function formatarData(excelDate) {
-  if (typeof excelDate === 'string') return excelDate; // já vem formatada
+  if (typeof excelDate === 'string') return excelDate;
   const jsDate = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
-  return jsDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  return jsDate.toISOString().split('T')[0];
 }
 
 function formatarHora(excelHour) {
-  if (typeof excelHour === 'string') return excelHour.padStart(5, '0'); // já vem como HH:mm
-  const totalMinutes = Math.round(24 * 60 * excelHour); // hora decimal
+  if (typeof excelHour === 'string') return excelHour.padStart(5, '0');
+  const totalMinutes = Math.round(24 * 60 * excelHour);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
-
 
 importarObjetivos();

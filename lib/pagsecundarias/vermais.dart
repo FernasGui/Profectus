@@ -53,10 +53,19 @@ class _VerMaisPageState extends State<VerMaisPage> {
           .collection('users')
           .doc(userId)
           .collection('objetivos')
-          .orderBy('dataLimite')
           .get();
 
-      _objetivos = snapshot.docs.map((doc) => doc.data()).toList();
+      var objetivos = snapshot.docs.map((doc) => doc.data()).toList();
+
+      objetivos.sort((a, b) {
+        final aNumero = a['numero'] ?? 0;
+        final bNumero = b['numero'] ?? 0;
+        return aNumero.compareTo(bNumero);
+      });
+
+      setState(() {
+        _objetivos = objetivos;
+      });
     } catch (e) {
       print('Erro ao carregar objetivos: $e');
     }
@@ -150,21 +159,19 @@ class _VerMaisPageState extends State<VerMaisPage> {
                   const SizedBox(height: 20),
                   const Text('Objetivos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  ..._objetivos.asMap().entries.map((entry) {
-                    int index = entry.key + 1;
-                    var obj = entry.value;
+                  ..._objetivos.map((obj) {
+                    final numero = obj['numero'] ?? '—';
                     final descricao = obj['descricao'] ?? '';
-                    final pontos = (obj['pontos'] ?? 0).toDouble();
-                    final prazo = obj['prazo'] ?? '';
+                    final progressoRelativo = (obj['progressoRelativo'] ?? 0.0) * 100;
                     final dataLimite = (obj['dataLimite'] as Timestamp).toDate();
-                    final percentagem = (pontos / 100).clamp(0.0, 1.0);
+                    final percentagem = (progressoRelativo / 100).clamp(0.0, 1.0);
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Objetivo $index: $descricao', style: const TextStyle(color: Color(0xFF333333), fontSize: 14)),
+                          Text('Objetivo $numero: $descricao', style: const TextStyle(color: Color(0xFF333333), fontSize: 14)),
                           const SizedBox(height: 4),
                           LinearProgressIndicator(
                             value: percentagem,
@@ -188,7 +195,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
                                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                                 ),
                                 const SizedBox(height: 8),
-                                Text('Progresso: ${pontos.toInt()}% | Prazo: $prazo | Data limite: ${dataLimite.day}/${dataLimite.month}/${dataLimite.year}',
+                                Text('Progresso: ${progressoRelativo.toStringAsFixed(0)}% | Data limite: ${dataLimite.day}/${dataLimite.month}/${dataLimite.year}',
                                     style: const TextStyle(color: Colors.white)),
                               ],
                             ),
