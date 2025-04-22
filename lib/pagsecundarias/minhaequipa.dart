@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/desafios.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/notificacoes.dart';
@@ -12,22 +14,77 @@ class MinhaEquipaPage extends StatefulWidget {
 }
 
 class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   int _selectedIndex = 1;
+  bool _hasNotifications = false;
+  bool _isLoading = true;
+  Map<String, List<String>> _colaboradoresPorObjetivo = {};
+  Map<String, String> _situacoesPorObjetivo = {};
+  List<String> _objetivosOrdenados = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados();
+  }
+
+  void _carregarDados() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      var notificacoes = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('notificacoes')
+          .limit(1)
+          .get();
+
+      var usersSnapshot = await FirebaseFirestore.instance.collection('users').get();
+
+      Map<String, List<String>> tempColaboradores = {};
+      Map<String, String> tempSituacoes = {};
+
+      for (var userDoc in usersSnapshot.docs) {
+        final nome = userDoc.data()['nome'] ?? 'Colaborador';
+        final objetivosSnapshot = await userDoc.reference.collection('objetivos').get();
+
+        for (var objetivoDoc in objetivosSnapshot.docs) {
+          final data = objetivoDoc.data();
+          final descricao = data['descricao'] ?? '';
+          final situacao = data['pontoSituacao'] ?? '';
+
+          if (!tempColaboradores.containsKey(descricao)) {
+            tempColaboradores[descricao] = [];
+            tempSituacoes[descricao] = situacao;
+          }
+
+          if (!tempColaboradores[descricao]!.contains(nome)) {
+            tempColaboradores[descricao]!.add(nome);
+          }
+        }
+      }
+
+      setState(() {
+        _hasNotifications = notificacoes.docs.isNotEmpty;
+        _colaboradoresPorObjetivo = tempColaboradores;
+        _situacoesPorObjetivo = tempSituacoes;
+        _objetivosOrdenados = tempColaboradores.keys.toList()..sort();
+        _isLoading = false;
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
 
     switch (index) {
       case 0:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DesafiosPage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DesafiosPage()));
         break;
       case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PrincipalPage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PrincipalPage()));
         break;
       case 2:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ConfiguracaoPage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ConfiguracaoPage()));
         break;
     }
   }
@@ -40,9 +97,7 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -57,43 +112,51 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => MensagensPage()));
                 },
               ),
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                   ),
                 ),
-              ),
             ],
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Os meus projetos'),
-            const SizedBox(height: 20),
-            _buildProject('Projeto 1 - Cliente Jeronymo'),
-            const SizedBox(height: 20),
-            _buildProject('Projeto 2 - Cliente BP'),
-            const SizedBox(height: 20),
-            _buildProject('Projeto 3 - Cliente Continente'),
-          ],
-        ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle('Objetivos da Minha Equipa'),
+                  const SizedBox(height: 20),
+                  ..._objetivosOrdenados.map((descricao) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: ExpansionTile(
+                        title: Text(descricao, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text('Colaboradores: ${_colaboradoresPorObjetivo[descricao]?.join(', ') ?? ''}'),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(_situacoesPorObjetivo[descricao] ?? 'Sem informação'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
@@ -122,46 +185,9 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
       child: Center(
         child: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
-    );
-  }
-
-  Widget _buildProject(String projectName) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ExpansionTile(
-        title: Text(
-          projectName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        children: [
-          _buildSubList('Ponto de Situação', ['Colaborador 1', 'Colaborador 2', 'Colaborador 3']),
-          _buildSubList('Análise Preditiva', ['Colaborador 4', 'Colaborador 5']),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubList(String title, List<String> colaboradores) {
-    return ExpansionTile(
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-      ),
-      children: colaboradores.map((colaborador) => ListTile(
-        title: Text(colaborador),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          // Ação ao clicar no colaborador
-        },
-      )).toList(),
     );
   }
 }

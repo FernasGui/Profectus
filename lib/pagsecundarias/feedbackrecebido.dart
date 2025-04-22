@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 
 class FeedbackRecebidoPage extends StatefulWidget {
   const FeedbackRecebidoPage({Key? key}) : super(key: key);
@@ -11,15 +12,31 @@ class FeedbackRecebidoPage extends StatefulWidget {
 
 class _FeedbackRecebidoPageState extends State<FeedbackRecebidoPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  late String _userId;
-  bool _loading = true;
+  String? _userId;
+  bool _hasNotifications = false;
+  bool _loadingUser = true;
 
   @override
   void initState() {
     super.initState();
+    _carregarUtilizador();
+  }
+
+  Future<void> _carregarUtilizador() async {
     final user = _auth.currentUser;
     if (user != null) {
       _userId = user.uid;
+      final notificacoes = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('notificacoes')
+          .limit(1)
+          .get();
+
+      setState(() {
+        _hasNotifications = notificacoes.docs.isNotEmpty;
+        _loadingUser = false;
+      });
     }
   }
 
@@ -37,12 +54,40 @@ class _FeedbackRecebidoPageState extends State<FeedbackRecebidoPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingUser || _userId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
         backgroundColor: const Color(0xFF358932),
         elevation: 0,
         title: const Text('Feedback Recebido'),
+        actions: [
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.mail_outline, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => MensagensPage()));
+                },
+              ),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -52,14 +97,15 @@ class _FeedbackRecebidoPageState extends State<FeedbackRecebidoPage> {
             .orderBy('dataHora', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Sem feedback recebido.'));
           }
 
           final feedbacks = snapshot.data!.docs;
+
+          if (feedbacks.isEmpty) {
+            return const Center(child: Text('Sem feedback recebido.'));
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
@@ -68,7 +114,6 @@ class _FeedbackRecebidoPageState extends State<FeedbackRecebidoPage> {
               final data = feedbacks[index].data() as Map<String, dynamic>;
               final uid = data['uid'] ?? '';
               final dataHora = data['dataHora'] ?? '';
-              
               final texto = data['mensagem'] ?? '';
 
               return FutureBuilder<String>(
@@ -95,19 +140,12 @@ class _FeedbackRecebidoPageState extends State<FeedbackRecebidoPage> {
                           ),
                         ],
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),                   
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            texto,
-                            style: const TextStyle(fontSize: 14, color: Colors.black87),
-                          ),
-                        ],
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          texto,
+                          style: const TextStyle(fontSize: 14, color: Colors.black87),
+                        ),
                       ),
                     ),
                   );

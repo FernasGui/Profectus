@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/principalPage.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 
 class RankingPage extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class _RankingPageState extends State<RankingPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _userCargo = '';
   bool _isLoading = true;
+  bool _hasNotifications = false;
   int _selectedIndex = 0;
   List<Map<String, dynamic>> _rankingData = [];
   String _currentUserId = '';
@@ -29,27 +31,35 @@ class _RankingPageState extends State<RankingPage> {
     if (user != null) {
       _currentUserId = user.uid;
       var usersSnapshot = await FirebaseFirestore.instance.collection('users').get();
+      final notificacoes = await FirebaseFirestore.instance.collection('users').doc(_currentUserId).collection('notificacoes').limit(1).get();
 
       List<Map<String, dynamic>> data = [];
 
       for (var userDoc in usersSnapshot.docs) {
         var objetivosSnapshot = await userDoc.reference.collection('objetivos').get();
-        int completed = objetivosSnapshot.docs
-            .where((doc) => (doc.data()['pontos'] ?? 0) >= 100)
-            .length;
+        double somaProgressoRelativo = 0.0;
+
+        for (var doc in objetivosSnapshot.docs) {
+          final progresso = doc.data()['progressoRelativo'];
+          if (progresso != null) {
+            somaProgressoRelativo += (progresso as num).toDouble();
+          }
+        }
 
         data.add({
           'uid': userDoc.id,
-          'nome': userDoc.data()['nome'] ?? 'Sem Nome',
-          'completos': completed
+          'score': somaProgressoRelativo
         });
       }
 
-      data.sort((a, b) => b['completos'].compareTo(a['completos']));
+      data.sort((a, b) => b['score'].compareTo(a['score']));
+
+      final userDoc = usersSnapshot.docs.firstWhere((d) => d.id == _currentUserId);
 
       setState(() {
         _rankingData = data;
-        _userCargo = usersSnapshot.docs.firstWhere((d) => d.id == _currentUserId).data()['cargo'] ?? '';
+        _userCargo = userDoc.data()['cargo'] ?? '';
+        _hasNotifications = notificacoes.docs.isNotEmpty;
         _isLoading = false;
       });
     }
@@ -96,17 +106,19 @@ class _RankingPageState extends State<RankingPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage()));
+                },
               ),
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 12)),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
                 ),
-              ),
             ],
           ),
         ],

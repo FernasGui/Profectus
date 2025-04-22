@@ -127,7 +127,7 @@ class _VerMaisPageState extends State<VerMaisPage> {
                 child: Container(
                   padding: const EdgeInsets.all(2),
                   decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
+                  child: const Text(' ', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ),
             ],

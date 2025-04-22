@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 
 class FeedbackDadoPage extends StatefulWidget {
   const FeedbackDadoPage({Key? key}) : super(key: key);
@@ -11,37 +12,82 @@ class FeedbackDadoPage extends StatefulWidget {
 
 class _FeedbackDadoPageState extends State<FeedbackDadoPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  late String _userId;
+  String? _userId;
+  bool _hasNotifications = false;
+  bool _loadingUser = true;
 
   @override
   void initState() {
     super.initState();
+    _carregarUtilizador();
+  }
+
+  Future<void> _carregarUtilizador() async {
     final user = _auth.currentUser;
     if (user != null) {
       _userId = user.uid;
+      final notificacoes = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('notificacoes')
+          .limit(1)
+          .get();
+
+      setState(() {
+        _hasNotifications = notificacoes.docs.isNotEmpty;
+        _loadingUser = false;
+      });
     }
   }
 
-Future<String> _buscarNomePorUid(String uid) async {
-  try {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    if (doc.exists) {
-      return doc.data()?['nome'] ?? 'Anónimo';
+  Future<String> _buscarNomePorUid(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return doc.data()?['nome'] ?? 'Anónimo';
+      }
+    } catch (e) {
+      // erro ao obter nome
     }
-  } catch (e) {
-    // erro ao obter nome
+    return 'Anónimo';
   }
-  return 'Anónimo';
-}
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingUser || _userId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
         backgroundColor: const Color(0xFF358932),
         elevation: 0,
         title: const Text('Feedback Dado'),
+        actions: [
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.mail_outline, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => MensagensPage()));
+                },
+              ),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -51,21 +97,22 @@ Future<String> _buscarNomePorUid(String uid) async {
             .orderBy('dataHora', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Nenhum feedback dado.'));
           }
 
           final feedbacks = snapshot.data!.docs;
+
+          if (feedbacks.isEmpty) {
+            return const Center(child: Text('Nenhum feedback dado.'));
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: feedbacks.length,
             itemBuilder: (context, index) {
               final data = feedbacks[index].data() as Map<String, dynamic>;
-              final uid = data['uid'] ?? ''; // agora a correspondência usa uid
+              final uid = data['uid'] ?? '';
               final dataHora = data['dataHora'] ?? '';
               final texto = data['mensagem'] ?? '';
 

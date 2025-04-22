@@ -26,6 +26,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   String _userCargo = '';
   int _selectedIndex = 0;
   bool _isLoading = true;
+  bool _hasNotifications = false;
   List<Map<String, dynamic>> _objetivos = [];
 
   @override
@@ -50,17 +51,23 @@ class _PrincipalPageState extends State<PrincipalPage> {
               .collection('objetivos')
               .get();
 
+          var notificacoesSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('notificacoes')
+              .limit(1)
+              .get();
+
+          var objetivos = snapshot.docs.map((doc) => doc.data()).toList();
+          objetivos.sort((a, b) =>
+              ((b['progressoRelativo'] ?? 0) as num).compareTo((a['progressoRelativo'] ?? 0) as num));
+
           setState(() {
             _userName = nome;
             _userCargo = cargo;
             _userEmail = user.email ?? 'No Email';
-            _objetivos = snapshot.docs.asMap().entries.map((entry) {
-              return {
-                ...entry.value.data(),
-                'numero': entry.key + 1
-              };
-            }).toList();
-            _objetivos.sort((a, b) => (b['pontos'] ?? 0).compareTo(a['pontos'] ?? 0));
+            _objetivos = objetivos;
+            _hasNotifications = notificacoesSnapshot.docs.isNotEmpty;
             _isLoading = false;
           });
         }
@@ -131,19 +138,20 @@ class _PrincipalPageState extends State<PrincipalPage> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => MensagensPage()));
                 },
               ),
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
                 ),
-              ),
             ],
           ),
         ],
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -226,8 +234,8 @@ class _PrincipalPageState extends State<PrincipalPage> {
             const SizedBox(height: 6),
             ..._objetivos.take(3).map((obj) {
               final numero = obj['numero'] ?? 0;
-              final pontos = (obj['pontos'] ?? 0).toDouble();
-              final percentagem = (pontos / 100).clamp(0.0, 1.0);
+              final progressoRelativo = (obj['progressoRelativo'] ?? 0).toDouble();
+              final percentagem = progressoRelativo.clamp(0.0, 1.0);
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),

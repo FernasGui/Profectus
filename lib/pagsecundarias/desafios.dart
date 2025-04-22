@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:profectus/pagsecundarias/ranking.dart';
 import 'package:profectus/pagsecundarias/minhaequipa.dart';
 import 'package:profectus/pagsecundarias/configuracao.dart';
 import 'package:profectus/pagsecundarias/notificacoes.dart';
 import 'package:profectus/principalPage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DesafiosPage extends StatefulWidget {
   @override
@@ -16,8 +16,10 @@ class _DesafiosPageState extends State<DesafiosPage> {
   int _selectedIndex = 0;
   String _userCargo = '';
   bool _showPopup = false;
-  List<int> _completedObjectiveIndexes = [];
+  bool _hasNotifications = false;
+  bool _isLoading = true;
   List<Map<String, dynamic>> _objetivos = [];
+  List<int> _completedObjectiveIndexes = [];
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -30,17 +32,18 @@ class _DesafiosPageState extends State<DesafiosPage> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       var doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      var notificacoes = await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notificacoes').limit(1).get();
       var objetivosSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('objetivos')
-          .orderBy('descricao')
+          .orderBy('numero')
           .get();
 
       var objetivos = objetivosSnapshot.docs.map((doc) => doc.data()).toList();
       var completedIndexes = <int>[];
       for (int i = 0; i < objetivos.length; i++) {
-        if ((objetivos[i]['pontos'] ?? 0) >= 100) {
+        if ((objetivos[i]['progressoRelativo'] ?? 0.0) >= 1.0) {
           completedIndexes.add(i);
         }
       }
@@ -49,7 +52,9 @@ class _DesafiosPageState extends State<DesafiosPage> {
         _userCargo = doc.data()?['cargo'] ?? '';
         _objetivos = objetivos;
         _completedObjectiveIndexes = completedIndexes;
+        _hasNotifications = notificacoes.docs.isNotEmpty;
         _showPopup = completedIndexes.isNotEmpty;
+        _isLoading = false;
       });
     }
   }
@@ -113,25 +118,27 @@ class _DesafiosPageState extends State<DesafiosPage> {
                   );
                 },
               ),
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: const Text('2', style: TextStyle(color: Colors.white, fontSize: 12)),
+              if (_hasNotifications)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
                 ),
-              ),
             ],
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          _buildMainContent(context),
-          if (_showPopup) _buildPopup(context),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                _buildMainContent(context),
+                if (_showPopup) _buildPopup(context),
+              ],
+            ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
@@ -185,12 +192,12 @@ class _DesafiosPageState extends State<DesafiosPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(_objetivos.length, (index) {
                   var obj = _objetivos[index];
-                  var pontos = (obj['pontos'] ?? 0).toDouble();
-                  var progress = (pontos / 100).clamp(0.0, 1.0);
+                  var progress = (obj['progressoRelativo'] ?? 0.0).toDouble().clamp(0.0, 1.0);
+                  var numero = obj['numero'] ?? index + 1;
                   var color = colors[index % colors.length];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: _buildBar(progress, color, 'Objetivo ${index + 1}'),
+                    child: _buildBar(progress, color, 'Objetivo $numero'),
                   );
                 }),
               ),
@@ -214,7 +221,7 @@ class _DesafiosPageState extends State<DesafiosPage> {
   }
 
   Widget _buildPopup(BuildContext context) {
-    String objetivosText = _completedObjectiveIndexes.map((i) => 'Objetivo ${i + 1}').join(' e ');
+    String objetivosText = _completedObjectiveIndexes.map((i) => 'Objetivo ${_objetivos[i]['numero'] ?? i + 1}').join(' e ');
 
     return Center(
       child: Container(
