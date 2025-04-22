@@ -163,18 +163,7 @@ class _ConfiguracaoPageState extends State<ConfiguracaoPage> {
                   _buildInfoTile(Icons.supervisor_account, 'Chefe Direto', _chefe),
                   const Divider(thickness: 1),
                   const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    ),
-                    onPressed: () {},
-                    icon: const Icon(Icons.edit, color: Colors.white),
-                    label: const Text(
-                      'Editar Perfil',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
+                  
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(

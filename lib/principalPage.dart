@@ -9,6 +9,7 @@ import 'package:profectus/pagsecundarias/vermais.dart';
 import 'package:profectus/pagsecundarias/notificacoes.dart';
 import 'package:profectus/pagsecundarias/feedbackrecebido.dart';
 import 'package:profectus/pagsecundarias/feedbackdado.dart';
+import 'package:profectus/pagsecundarias/analisepreditiva.dart';
 
 class PrincipalPage extends StatefulWidget {
   final String? nome;
@@ -342,34 +343,72 @@ class _PrincipalPageState extends State<PrincipalPage> {
   }
 
   Widget _buildSituationCard() {
-    return Card(
+  // Verifica se todos os objetivos estão concluídos
+  bool todosConcluidos = _objetivos.isNotEmpty &&
+      _objetivos.every((obj) => (obj['progressoRelativo'] ?? 0.0).toDouble() >= 1.0);
+
+  // Calcular a moda dos resultados
+ Map<String, int> frequencias = {};
+for (var obj in _objetivos) {
+  String? resultado = obj['resultado'];
+  if (resultado != null && resultado.isNotEmpty) {
+    frequencias[resultado] = (frequencias[resultado] ?? 0) + 1;
+  }
+}
+
+  // Define a frase final com base nas condições
+String frase = '';
+if (_objetivos.every((obj) => (obj['progressoRelativo'] ?? 0.0).toDouble() >= 1.0)) {
+  frase = 'Concluiu com sucesso todos os objetivos!';
+} else if (frequencias.isNotEmpty) {
+  String moda = frequencias.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+  frase = '$moda! Clique para obter mais informações.';
+} else {
+  frase = 'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.';
+}
+
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalisePreditivaPage()));
+    },
+    child: Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF358932),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'A Minha Situação Atual',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF358932),
+              borderRadius: BorderRadius.circular(12),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Está dentro dos objetivos anuais! Mas há sempre espaço para melhorar.',
-              style: TextStyle(fontSize: 14, color: Colors.white),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'A Minha Situação Atual',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  frase,
+                  style: const TextStyle(fontSize: 14, color: Colors.white),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const Positioned(
+            right: 12,
+            top: 12,
+            child: Icon(Icons.add, color: Colors.white),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

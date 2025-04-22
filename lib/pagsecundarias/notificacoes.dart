@@ -96,7 +96,7 @@ class _MensagensPageState extends State<MensagensPage> {
                               alignment: Alignment.bottomRight,
                               child: Text(
                                 dataHora,
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                style: const TextStyle(fontSize: 12, color: Colors.black),
                               ),
                             ),
                           ],
