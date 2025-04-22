@@ -10,6 +10,7 @@ import 'package:profectus/pagsecundarias/notificacoes.dart';
 import 'package:profectus/pagsecundarias/feedbackrecebido.dart';
 import 'package:profectus/pagsecundarias/feedbackdado.dart';
 import 'package:profectus/pagsecundarias/analisepreditiva.dart';
+import 'package:profectus/pagsecundarias/profectusbot.dart';
 
 class PrincipalPage extends StatefulWidget {
   final String? nome;
@@ -279,7 +280,11 @@ class _PrincipalPageState extends State<PrincipalPage> {
   }
 
   Widget _buildBotCard() {
-    return Card(
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfectusBotPage()));
+    },
+    child: Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
@@ -298,8 +303,9 @@ class _PrincipalPageState extends State<PrincipalPage> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFeedbackCard() {
     return Card(

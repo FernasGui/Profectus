@@ -21,6 +21,8 @@ dependencies:
   cloud_functions: ^4.6.8 # Permite chamadas remotas a funções hospedadas no Firebase.
   flutter_svg: ^2.0.10+1 # Suporte para exibir imagens no formato SVG.
   intl: ^0.19.0 # Utilizado para formatação de datas, números e internacionalização (i18n).
+  http: ^1.2.0
+  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   flutter_test:
