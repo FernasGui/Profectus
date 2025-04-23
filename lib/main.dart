@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:profectus/firebase_options.dart'; // Certifique-se de gerar este arquivo com o comando "flutterfire configure".
-import 'beginPage.dart'; // Substitua pelo caminho correto da sua página inicial.
+// import 'package:flutter_dotenv/flutter_dotenv.dart'; // TEMPORARIAMENTE comentado
+import 'package:profectus/firebase_options.dart';
+import 'package:profectus/beginPage.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();void main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // await dotenv.load(fileName: ".env"); // <--- desativado temporariamente
+  // print('Chave OpenAI: ${dotenv.env['OPENAI_API_KEY']}'); // <--- também comentado
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Se estiver usando o App Check, ative-o aqui.
-await FirebaseAppCheck.instance.activate();
-  
+
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -26,24 +29,23 @@ class MyApp extends StatelessWidget {
       title: 'Profectus',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Configuração de cores principais e secundárias
         colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.indigo, // Substitua por sua cor primária
-          accentColor: const Color(0xFF66CC99), // Cor de destaque
+          primarySwatch: Colors.indigo,
+        ).copyWith(
+          secondary: const Color(0xFF66CC99),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Fundo claro
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFF083366)),  // Texto principal
-bodyMedium: TextStyle(color: Color(0xFF666666)), // Texto secundário
-
+          bodyLarge: TextStyle(color: Color(0xFF083366)),
+          bodyMedium: TextStyle(color: Color(0xFF666666)),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF003366), // Cor da AppBar
-          foregroundColor: Colors.white, // Cor do texto da AppBar
+          backgroundColor: Color(0xFF003366),
+          foregroundColor: Colors.white,
         ),
       ),
       navigatorKey: navigatorKey,
-      home: SplashScreen(), // Tela inicial (substitua por `beginPage` ou outra página inicial)
+      home: SplashScreen(),
     );
   }
 }
