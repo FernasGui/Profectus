@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:profectus/pagsecundarias/desafios.dart';
-import 'package:profectus/pagsecundarias/configuracao.dart';
-import 'package:profectus/pagsecundarias/notificacoes.dart';
-import 'package:profectus/principalPage.dart';
 
 class MinhaEquipaPage extends StatefulWidget {
   const MinhaEquipaPage({Key? key}) : super(key: key);
@@ -15,12 +11,11 @@ class MinhaEquipaPage extends StatefulWidget {
 
 class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  int _selectedIndex = 1;
-  bool _hasNotifications = false;
   bool _isLoading = true;
-  Map<String, List<String>> _colaboradoresPorObjetivo = {};
-  Map<String, String> _situacoesPorObjetivo = {};
-  List<String> _objetivosOrdenados = [];
+  bool _hasNotifications = false;
+  List<Map<String, dynamic>> _meusProjetos = [];
+  String? _userNome;
+  String? _userCargo;
 
   @override
   void initState() {
@@ -28,65 +23,83 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
     _carregarDados();
   }
 
-  void _carregarDados() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      var notificacoes = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('notificacoes')
-          .limit(1)
-          .get();
+  Future<void> _carregarDados() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
 
-      var usersSnapshot = await FirebaseFirestore.instance.collection('users').get();
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final nome = userDoc.data()?['nome'] ?? 'Sem Nome';
+    final cargo = userDoc.data()?['cargo'] ?? 'Colaborador';
 
-      Map<String, List<String>> tempColaboradores = {};
-      Map<String, String> tempSituacoes = {};
+    final projetosSnapshot =
+        await FirebaseFirestore.instance.collection('projetos').get();
+    final notificacoes = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('notificacoes')
+        .limit(1)
+        .get();
 
-      for (var userDoc in usersSnapshot.docs) {
-        final nome = userDoc.data()['nome'] ?? 'Colaborador';
-        final objetivosSnapshot = await userDoc.reference.collection('objetivos').get();
+    List<Map<String, dynamic>> projetosUser = [];
 
-        for (var objetivoDoc in objetivosSnapshot.docs) {
-          final data = objetivoDoc.data();
-          final descricao = data['descricao'] ?? '';
-          final situacao = data['pontoSituacao'] ?? '';
+    for (var doc in projetosSnapshot.docs) {
+      final data = doc.data();
+      final equipa = List.from(data['equipa'] ?? []);
+      final equipaIds = equipa.map((e) => e.toString()).toList();
 
-          if (!tempColaboradores.containsKey(descricao)) {
-            tempColaboradores[descricao] = [];
-            tempSituacoes[descricao] = situacao;
-          }
+      if (equipaIds.contains(user.uid)) {
+        List<Map<String, dynamic>> membrosDetalhes = [];
 
-          if (!tempColaboradores[descricao]!.contains(nome)) {
-            tempColaboradores[descricao]!.add(nome);
-          }
+        for (var membroId in equipaIds) {
+          if (membroId == user.uid) continue; // Ignorar chefe na lista
+
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(membroId)
+              .get();
+          final nome = userDoc.data()?['nome'] ?? 'Sem Nome';
+
+          final objetivosSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(membroId)
+              .collection('objetivos')
+              .get();
+
+          final objetivos =
+              objetivosSnapshot.docs.map((d) => d.data()).toList();
+
+          int total = objetivos.length;
+          int positivos = objetivos.where((o) {
+            final r = (o['resultado'] ?? '').toString().toLowerCase();
+            return r.contains('concluído') ||
+                r.contains('concluido') ||
+                r.contains('bom caminho');
+          }).length;
+
+          final cor =
+              (total > 0 && (positivos / total) >= 0.51) ? Colors.green : Colors.amber;
+
+          membrosDetalhes.add({
+            "nome": nome,
+            "cor": cor,
+          });
         }
+
+        projetosUser.add({
+          "nomeProjeto": data['nome'] ?? 'Projeto Sem Nome',
+          "membros": membrosDetalhes,
+        });
       }
-
-      setState(() {
-        _hasNotifications = notificacoes.docs.isNotEmpty;
-        _colaboradoresPorObjetivo = tempColaboradores;
-        _situacoesPorObjetivo = tempSituacoes;
-        _objetivosOrdenados = tempColaboradores.keys.toList()..sort();
-        _isLoading = false;
-      });
     }
-  }
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DesafiosPage()));
-        break;
-      case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PrincipalPage()));
-        break;
-      case 2:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ConfiguracaoPage()));
-        break;
-    }
+    setState(() {
+      _hasNotifications = notificacoes.docs.isNotEmpty;
+      _meusProjetos = projetosUser;
+      _userNome = nome;
+      _userCargo = cargo;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -112,7 +125,7 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => MensagensPage()));
+                  Navigator.pushNamed(context, '/notificacoes');
                 },
               ),
               if (_hasNotifications)
@@ -121,7 +134,8 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
                   top: 6,
                   child: Container(
                     padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
                   ),
                 ),
             ],
@@ -130,64 +144,46 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle('Objetivos da Minha Equipa'),
-                  const SizedBox(height: 20),
-                  ..._objetivosOrdenados.map((descricao) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ExpansionTile(
-                        title: Text(descricao, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Colaboradores: ${_colaboradoresPorObjetivo[descricao]?.join(', ') ?? ''}'),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(_situacoesPorObjetivo[descricao] ?? 'Sem informação'),
-                          ),
-                        ],
+              itemCount: _meusProjetos.length,
+              itemBuilder: (context, i) {
+                final projeto = _meusProjetos[i];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$_userCargo: $_userNome',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }),
-                ],
-              ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 3,
+                      child: ExpansionTile(
+                        title: Text(projeto['nomeProjeto'],
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        children: projeto['membros'].map<Widget>((membro) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: membro['cor'],
+                              radius: 8,
+                            ),
+                            title: Text(membro['nome']),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white,
-        selectedLabelStyle: const TextStyle(fontSize: 14),
-        unselectedLabelStyle: const TextStyle(fontSize: 14),
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Desafios'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configurações'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF358932),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 }
