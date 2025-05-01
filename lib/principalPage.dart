@@ -155,24 +155,28 @@ class _PrincipalPageState extends State<PrincipalPage> {
       ),
 
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileSection(),
-                  const SizedBox(height: 16),
-                  _buildObjectivesCard(),
-                  const SizedBox(height: 16),
-                  _buildBotCard(),
-                  const SizedBox(height: 16),
-                  _buildFeedbackCard(),
-                  const SizedBox(height: 16),
-                  _buildSituationCard(),
-                ],
-              ),
-            ),
+    ? const Center(child: CircularProgressIndicator())
+    : Scrollbar(
+        thumbVisibility: true, // mostra a barra mesmo se não estiver a rolar
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProfileSection(),
+              const SizedBox(height: 16),
+              _buildObjectivesCard(),
+              const SizedBox(height: 16),
+              _buildBotCard(),
+              const SizedBox(height: 16),
+              _buildFeedbackCard(),
+              const SizedBox(height: 16),
+              _buildSituationCard(),
+            ],
+          ),
+        ),
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,

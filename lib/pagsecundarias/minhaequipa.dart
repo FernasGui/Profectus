@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:profectus/pagsecundarias/notificacoes.dart';
 
 class MinhaEquipaPage extends StatefulWidget {
   const MinhaEquipaPage({Key? key}) : super(key: key);
@@ -125,7 +126,10 @@ class _MinhaEquipaPageState extends State<MinhaEquipaPage> {
               IconButton(
                 icon: const Icon(Icons.mail_outline, color: Colors.white),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/notificacoes');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MensagensPage()),
+                  );
                 },
               ),
               if (_hasNotifications)
