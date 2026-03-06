@@ -38,7 +38,7 @@ O código pode ser usado apenas para fins académicos salvo indicação contrár
 
 
 ## 🙌 Autor
-Guilherme Fernandes
+Guilherme Fernandes e Mafalda Santorum
 Projeto desenvolvido para fins académicos.
 
-Se precisares de ajuda, abre um issue no GitHub.
+Se precisares de ajuda, envia uma mensagem - https://www.linkedin.com/in/guilherme-fernandes--/
