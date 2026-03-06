@@ -1,6 +1,6 @@
 # Profectus
 
-É uma aplicação desenvolvida em Flutter.
+É uma aplicação desenvolvida em Flutter e Google Firebase.
 
 ## 🛠️ Git — Comandos úteis
  📥 Clonar o repositório
