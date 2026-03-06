@@ -45,3 +45,7 @@ app.*.map.json
 # OpenAI API key file # Chaves de API
 .env
 API.env
+serviceAccountKey.json 
+*.env 
+node_modules/ 
+build/ 
